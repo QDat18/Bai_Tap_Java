@@ -1,268 +1,410 @@
 package ui;
 
-// Remove import dao.ACCDAO;
-import dao.NhanVienDAO; // Import NhanVienDAO instead
+import dao.NhanVienDAO;
 import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.RoundRectangle2D;
+import java.util.Arrays;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-// Remove import model.ACC;
-import model.NhanVien; // Import model NhanVien instead
+import model.NhanVien;
 
 public class LoginDialog extends JDialog {
 
-    // Define colors (reusing the palette)
-     Color coffeeBrown = new Color(102, 51, 0);
-     Color lightBeige = new Color(245, 245, 220);
-     Color accentGreen = new Color(60, 179, 113);
-     Color darkGray = new Color(50, 50, 50);
-     Color linkColor = new Color(0, 102, 204); // Color for links
+    private final Color coffeeBrown = new Color(102, 51, 0);
+    private final Color lightBeige = new Color(245, 245, 220);
+    private final Color accentGreen = new Color(60, 179, 113);
+    private final Color darkGray = new Color(50, 50, 50);
+    private final Color linkColor = new Color(0, 102, 204);
+    private final Color hoverGreen = new Color(72, 209, 143);
+    private final Color hoverLink = new Color(30, 144, 255);
 
-    // UI Components
     private JTextField txtUsername;
     private JPasswordField txtPassword;
     private JButton btnLogin;
     private JButton btnCancel;
-    private JButton btnRegister; // Button for Registration
-    private JButton btnForgotPassword; // Button for Forgot Password (or JLabel link)
+    private JButton btnRegister;
+    private JButton btnForgotPassword;
+    private JLabel lblTitle;
+    private JLabel lblLoading;
+    private JLabel lblLogo;
+    private JLabel lblWelcome;
+    private JPanel loadingPanel;
+    private JPanel mainContentPanel;
+    private Timer loadingTimer;
+    private JProgressBar progressBar;
+    private CardLayout cardLayout;
+    private JPanel cardPanel;
 
-    // Data Access Object - Change from ACCDAO to NhanVienDAO
     private NhanVienDAO nhanVienDAO;
+    private NhanVien loggedInUser;
 
-    // Logged-in user object - Change from ACC to NhanVien
-    private NhanVien loggedInUser; // Changed from loggedInAccount
-
-    public LoginDialog(Frame owner) { // Constructor vẫn có thể nhận Frame owner nếu cần khi gọi từ MainFrame
+    public LoginDialog(Frame owner) {
         super(owner, "Đăng nhập Hệ thống", true);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-
-        // Initialize DAO - Use NhanVienDAO
-        nhanVienDAO = new NhanVienDAO(); // Changed from accDAO = new ACCDAO();
-
-        // --- Content Pane ---
-        JPanel contentPane = new JPanel(new GridBagLayout());
+        
+        nhanVienDAO = new NhanVienDAO();
+        
+        setSize(600, 550);
+        setLocationRelativeTo(owner);
+        setUndecorated(true);
+        setShape(new RoundRectangle2D.Double(0, 0, 600, 550, 15, 15));
+        setResizable(false);
+        
+        JPanel contentPane = new JPanel();
+        contentPane.setLayout(new BorderLayout());
         contentPane.setBackground(lightBeige);
-        contentPane.setBorder(new EmptyBorder(30, 40, 30, 40)); // Tăng padding từ 20 lên 30-40
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(15, 15, 15, 15); // Tăng khoảng cách giữa các thành phần từ 10 lên 15
-        gbc.anchor = GridBagConstraints.WEST;
-
-        // Row 0: Title Label
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        JLabel lblTitle = new JLabel("ĐĂNG NHẬP HỆ THỐNG", SwingConstants.CENTER);
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 24)); // Tăng font size từ 18 lên 24
-        lblTitle.setForeground(coffeeBrown);
-        contentPane.add(lblTitle, gbc);
-        gbc.gridwidth = 1;
-
-        // Row 1: Username
-        gbc.gridx = 0; gbc.gridy = 1; contentPane.add(createLabel("Tên đăng nhập:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 1;
-        txtUsername = new JTextField(20); // Tăng độ rộng từ 15 lên 20
-        txtUsername.setFont(new Font("Arial", Font.PLAIN, 14)); // Tăng font chữ input
-        txtUsername.setPreferredSize(new Dimension(250, 30)); // Thiết lập kích thước cố định lớn hơn
-        contentPane.add(txtUsername, gbc);
-
-        // Row 2: Password
-        gbc.gridx = 0; gbc.gridy = 2; contentPane.add(createLabel("Mật khẩu:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 2;
-        txtPassword = new JPasswordField(20); // Tăng độ rộng từ 15 lên 20
-        txtPassword.setFont(new Font("Arial", Font.PLAIN, 14)); // Tăng font chữ input
-        txtPassword.setPreferredSize(new Dimension(250, 30)); // Thiết lập kích thước cố định lớn hơn
-        contentPane.add(txtPassword, gbc);
-
-        // Row 3: Action Buttons Panel (Login/Cancel)
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
-        JPanel actionButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        actionButtonPanel.setBackground(lightBeige);
-
-        btnLogin = new JButton("Đăng nhập");
-        styleButton(btnLogin, accentGreen, Color.WHITE);
-        actionButtonPanel.add(btnLogin);
-
-        btnCancel = new JButton("Hủy");
-        styleButton(btnCancel, darkGray, Color.WHITE);
-        actionButtonPanel.add(btnCancel);
-
-        contentPane.add(actionButtonPanel, gbc);
-
-        // Row 4: Register and Forgot Password Links/Buttons
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 2; gbc.anchor = GridBagConstraints.CENTER;
-        JPanel linksPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0)); // Spacing between links
-        linksPanel.setBackground(lightBeige);
-
-        // Use JButtons styled like links
-        btnRegister = new JButton("Đăng ký tài khoản");
-        styleLinkButton(btnRegister); // Use helper for link styling
-        linksPanel.add(btnRegister);
-
-        btnForgotPassword = new JButton("Quên mật khẩu?");
-        styleLinkButton(btnForgotPassword); // Use helper for link styling
-        linksPanel.add(btnForgotPassword);
-
-        contentPane.add(linksPanel, gbc);
-
-        // --- Event Listeners ---
+        contentPane.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(102, 51, 0, 100), 1),
+            new EmptyBorder(20, 20, 20, 20)
+        ));
+        
+        cardPanel = new JPanel();
+        cardLayout = new CardLayout();
+        cardPanel.setLayout(cardLayout);
+        cardPanel.setOpaque(false);
+        
+        createMainPanel();
+        createLoadingPanel();
+        
+        cardPanel.add(mainContentPanel, "main");
+        cardPanel.add(loadingPanel, "loading");
+        contentPane.add(cardPanel, BorderLayout.CENTER);
+        
+        JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        toolBar.setOpaque(false);
+        JButton btnClose = new JButton("×");
+        btnClose.setForeground(coffeeBrown);
+        btnClose.setFont(new Font("Arial", Font.BOLD, 20));
+        btnClose.setBorderPainted(false);
+        btnClose.setContentAreaFilled(false);
+        btnClose.setFocusPainted(false);
+        btnClose.addActionListener(e -> cancelLogin());
+        btnClose.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btnClose.setForeground(Color.RED); }
+            public void mouseExited(MouseEvent e) { btnClose.setForeground(coffeeBrown); }
+        });
+        toolBar.add(btnClose);
+        contentPane.add(toolBar, BorderLayout.NORTH);
+        
+        MouseAdapter dragWindowAdapter = new MouseAdapter() {
+            private Point initialClick;
+            @Override public void mousePressed(MouseEvent e) { initialClick = e.getPoint(); }
+            @Override public void mouseDragged(MouseEvent e) {
+                Point currentPoint = e.getLocationOnScreen();
+                setLocation(currentPoint.x - initialClick.x, currentPoint.y - initialClick.y);
+            }
+        };
+        addMouseListener(dragWindowAdapter);
+        addMouseMotionListener(dragWindowAdapter);
+        
         btnLogin.addActionListener(e -> performLogin());
         btnCancel.addActionListener(e -> cancelLogin());
-        txtPassword.addActionListener(e -> performLogin()); // Enter key on password field
-
-        // Action listeners for new buttons
+        txtPassword.addActionListener(e -> performLogin());
         btnRegister.addActionListener(e -> openRegistrationDialog());
         btnForgotPassword.addActionListener(e -> openForgotPasswordDialog());
-
-        // Add the content pane to the dialog
+        
         getContentPane().add(contentPane);
-
-        pack();
-        setMinimumSize(new Dimension(450, 350)); // Thiết lập kích thước tối thiểu
-        setLocationRelativeTo(owner); // Center relative to owner (or screen if owner is null)
-        setResizable(false);
     }
-
-    // Helper method to create styled labels
-    private JLabel createLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setForeground(darkGray);
-        label.setFont(new Font("Arial", Font.BOLD, 16)); // Tăng font từ 12 lên 16 và làm đậm
-        return label;
+    
+    private void createMainPanel() {
+        mainContentPanel = new JPanel();
+        mainContentPanel.setLayout(new BoxLayout(mainContentPanel, BoxLayout.Y_AXIS));
+        mainContentPanel.setOpaque(false);
+        
+        JPanel logoPanel = new JPanel();
+        logoPanel.setOpaque(false);
+        lblLogo = new JLabel();
+        try {
+            ImageIcon logoIcon = new ImageIcon(getClass().getResource("/images/logo.png"));
+            Image scaledImage = logoIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+            lblLogo.setIcon(new ImageIcon(scaledImage));
+        } catch (Exception e) {
+            lblLogo.setText("LOGO");
+            lblLogo.setFont(new Font("Arial", Font.BOLD, 24));
+            lblLogo.setForeground(coffeeBrown);
+        }
+        logoPanel.add(lblLogo);
+        logoPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainContentPanel.add(logoPanel);
+        mainContentPanel.add(Box.createVerticalStrut(10));
+        
+        lblTitle = new JLabel("ĐĂNG NHẬP HỆ THỐNG");
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 24));
+        lblTitle.setForeground(coffeeBrown);
+        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainContentPanel.add(lblTitle);
+        mainContentPanel.add(Box.createVerticalStrut(30));
+        
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setOpaque(false);
+        formPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        
+        gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.EAST;
+        JLabel lblUsername = new JLabel("Tên đăng nhập:");
+        lblUsername.setFont(new Font("Arial", Font.BOLD, 16));
+        lblUsername.setForeground(darkGray);
+        formPanel.add(lblUsername, gbc);
+        
+        gbc.gridx = 1; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
+        txtUsername = new JTextField(20);
+        txtUsername.setFont(new Font("Arial", Font.PLAIN, 16));
+        txtUsername.setPreferredSize(new Dimension(250, 35));
+        formPanel.add(txtUsername, gbc);
+        
+        gbc.gridx = 0; gbc.gridy = 1; gbc.anchor = GridBagConstraints.EAST;
+        JLabel lblPassword = new JLabel("Mật khẩu:");
+        lblPassword.setFont(new Font("Arial", Font.BOLD, 16));
+        lblPassword.setForeground(darkGray);
+        formPanel.add(lblPassword, gbc);
+        
+        gbc.gridx = 1; gbc.gridy = 1; gbc.anchor = GridBagConstraints.WEST;
+        txtPassword = new JPasswordField(20);
+        txtPassword.setFont(new Font("Arial", Font.PLAIN, 16));
+        txtPassword.setPreferredSize(new Dimension(250, 35));
+        formPanel.add(txtPassword, gbc);
+        
+        mainContentPanel.add(formPanel);
+        mainContentPanel.add(Box.createVerticalStrut(30));
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setOpaque(false);
+        buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        btnLogin = new JButton("Đăng nhập");
+        btnLogin.setFont(new Font("Arial", Font.BOLD, 16));
+        btnLogin.setBackground(accentGreen);
+        btnLogin.setForeground(coffeeBrown);
+        btnLogin.setFocusPainted(false);
+        btnLogin.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btnLogin.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btnLogin.setBackground(hoverGreen); }
+            public void mouseExited(MouseEvent e) { btnLogin.setBackground(accentGreen); }
+        });
+        
+        btnCancel = new JButton("Hủy");
+        btnCancel.setFont(new Font("Arial", Font.BOLD, 16));
+        btnCancel.setBackground(darkGray);
+        btnCancel.setForeground(coffeeBrown);
+        btnCancel.setFocusPainted(false);
+        btnCancel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btnCancel.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btnCancel.setBackground(new Color(70, 70, 70)); }
+            public void mouseExited(MouseEvent e) { btnCancel.setBackground(accentGreen); }
+        });
+        
+        buttonPanel.add(btnLogin);
+        buttonPanel.add(Box.createHorizontalStrut(20));
+        buttonPanel.add(btnCancel);
+        
+        mainContentPanel.add(buttonPanel);
+        mainContentPanel.add(Box.createVerticalStrut(20));
+        
+        JPanel linksPanel = new JPanel();
+        linksPanel.setOpaque(false);
+        linksPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        btnRegister = new JButton("Đăng ký tài khoản");
+        btnRegister.setFont(new Font("Arial", Font.PLAIN, 14));
+        btnRegister.setForeground(linkColor);
+        btnRegister.setBorderPainted(false);
+        btnRegister.setContentAreaFilled(false);
+        btnRegister.setFocusPainted(false);
+        btnRegister.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnRegister.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btnRegister.setForeground(hoverLink); }
+            public void mouseExited(MouseEvent e) { btnRegister.setForeground(linkColor); }
+        });
+        
+        btnForgotPassword = new JButton("Quên mật khẩu?");
+        btnForgotPassword.setFont(new Font("Arial", Font.PLAIN, 14));
+        btnForgotPassword.setForeground(linkColor);
+        btnForgotPassword.setBorderPainted(false);
+        btnForgotPassword.setContentAreaFilled(false);
+        btnForgotPassword.setFocusPainted(false);
+        btnForgotPassword.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnForgotPassword.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btnForgotPassword.setForeground(hoverLink); }
+            public void mouseExited(MouseEvent e) { btnForgotPassword.setForeground(linkColor); }
+        });
+        
+        linksPanel.add(btnRegister);
+        linksPanel.add(Box.createHorizontalStrut(30));
+        linksPanel.add(btnForgotPassword);
+        
+        mainContentPanel.add(linksPanel);
     }
-
-    // Helper method to style regular buttons
-    private void styleButton(JButton button, Color bgColor, Color fgColor) {
-        button.setBackground(bgColor);
-        button.setForeground(fgColor);
-        button.setFocusPainted(false);
-        button.setBorder(BorderFactory.createCompoundBorder(
-                             BorderFactory.createLineBorder(fgColor, 1),
-                             BorderFactory.createEmptyBorder(8, 25, 8, 25))); // Tăng padding button
-        button.setOpaque(true);
-        button.setBorderPainted(true);
-        button.setFont(new Font("Arial", Font.BOLD, 16)); // Tăng font từ 12 lên 16
-        button.setPreferredSize(new Dimension(150, 40)); // Thiết lập kích thước cố định cho button
+    
+    private void createLoadingPanel() {
+        loadingPanel = new JPanel();
+        loadingPanel.setLayout(new BoxLayout(loadingPanel, BoxLayout.Y_AXIS));
+        loadingPanel.setOpaque(false);
+        
+        lblLogo = new JLabel();
+        try {
+            ImageIcon logoIcon = new ImageIcon(getClass().getResource("/images/logo.png"));
+            Image scaledImage = logoIcon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
+            lblLogo.setIcon(new ImageIcon(scaledImage));
+        } catch (Exception e) {
+            lblLogo.setText("LOGO");
+            lblLogo.setFont(new Font("Arial", Font.BOLD, 28));
+            lblLogo.setForeground(coffeeBrown);
+        }
+        lblLogo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loadingPanel.add(Box.createVerticalStrut(30));
+        loadingPanel.add(lblLogo);
+        loadingPanel.add(Box.createVerticalStrut(30));
+        
+        lblLoading = new JLabel("Đang đăng nhập...");
+        lblLoading.setFont(new Font("Arial", Font.BOLD, 20));
+        lblLoading.setForeground(coffeeBrown);
+        lblLoading.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loadingPanel.add(lblLoading);
+        loadingPanel.add(Box.createVerticalStrut(20));
+        
+        progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        progressBar.setForeground(accentGreen);
+        progressBar.setPreferredSize(new Dimension(250, 8));
+        progressBar.setMaximumSize(new Dimension(250, 8));
+        progressBar.setBackground(new Color(235, 235, 210));
+        progressBar.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loadingPanel.add(progressBar);
+        loadingPanel.add(Box.createVerticalStrut(40));
+        
+        lblWelcome = new JLabel("");
+        lblWelcome.setFont(new Font("Arial", Font.BOLD, 20));
+        lblWelcome.setForeground(coffeeBrown);
+        lblWelcome.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loadingPanel.add(lblWelcome);
     }
-
-    // Helper method to style buttons like links
-    private void styleLinkButton(JButton button) {
-        button.setBackground(lightBeige); // Match background
-        button.setForeground(linkColor); // Use link color
-        button.setBorderPainted(false); // No border
-        button.setContentAreaFilled(false); // No fill color
-        button.setFocusPainted(false); // No focus border
-        button.setOpaque(false); // Make it transparent
-        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); // Change cursor on hover
-        button.setFont(new Font("Arial", Font.PLAIN, 14)); // Tăng font cho link
-
-        // Add underline for links
-        button.setText("<html><u>" + button.getText() + "</u></html>");
-    }
-
-    // --- Login Logic ---
+    
     private void performLogin() {
         String username = txtUsername.getText().trim();
-        String password = new String(txtPassword.getPassword());
+        char[] passwordChars = txtPassword.getPassword();
+        String password = new String(passwordChars);
 
-        if (username.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu.",
-                "Lỗi đăng nhập", JOptionPane.WARNING_MESSAGE);
-             // Clear sensitive data from password field memory
-            java.util.Arrays.fill(txtPassword.getPassword(), ' ');
+        if (username.isEmpty() || passwordChars.length == 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu.",
+                    "Lỗi đăng nhập", JOptionPane.WARNING_MESSAGE);
+            clearPasswordField(passwordChars);
             return;
         }
 
-        // TODO: In a real application, hash the password before sending to DAO
-        // Call authenticate method from NhanVienDAO
-        loggedInUser = nhanVienDAO.authenticate(username, password); // Changed DAO call and variable
-
-        if (loggedInUser != null) { // Check if NhanVien object was returned
-            // Login successful
-             String displayName = loggedInUser.getTenNV(); // Use TenNV as display name
-             if (displayName == null || displayName.isEmpty()) {
-                 displayName = loggedInUser.getTendangnhap(); // Fallback to username
-             }
-            JOptionPane.showMessageDialog(this, "Đăng nhập thành công! Xin chào, " + displayName,
-                "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-             // Clear sensitive data from password field memory
-             java.util.Arrays.fill(txtPassword.getPassword(), ' ');
-            dispose(); // Close the login dialog
-        } else {
-            // Login failed
-            JOptionPane.showMessageDialog(this, "Tên đăng nhập hoặc Mật khẩu không chính xác.",
-                "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
-            txtPassword.setText("");
-             // Clear sensitive data from password field memory
-             java.util.Arrays.fill(txtPassword.getPassword(), ' ');
+        if (!isValidUsername(username)) {
+            JOptionPane.showMessageDialog(this,
+                    "Tên đăng nhập phải có độ dài 4-20 ký tự và chỉ chứa chữ cái, số, _ hoặc .",
+                    "Lỗi đăng nhập", JOptionPane.WARNING_MESSAGE);
+            txtUsername.setText("");
+            clearPasswordField(passwordChars);
             txtUsername.requestFocusInWindow();
+            return;
         }
-    }
 
+        cardLayout.show(cardPanel, "loading");
+
+        loggedInUser = nhanVienDAO.authenticate(username, password);
+
+        if (loggedInUser != null) {
+            String displayName = loggedInUser.getTenNV();
+            if (displayName == null || displayName.isEmpty()) {
+                displayName = loggedInUser.getTendangnhap();
+            }
+            lblWelcome.setText("The Coffee Team chào " + displayName);
+        } else {
+            lblWelcome.setText("The Coffee Team chào bạn");
+        }
+
+        String[] loadingStates = {"Đang đăng nhập.", "Đang đăng nhập..", "Đang đăng nhập..."};
+        final int[] currentState = {0};
+        Timer animationTimer = new Timer(90, e -> {
+            lblLoading.setText(loadingStates[currentState[0] % loadingStates.length]);
+            currentState[0]++;
+        });
+        animationTimer.start();
+
+        loadingTimer = new Timer(1000, e -> {
+            animationTimer.stop();
+
+            if (loggedInUser != null) {
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Tên đăng nhập hoặc Mật khẩu không chính xác.",
+                        "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
+                cardLayout.show(cardPanel, "main");
+                txtPassword.setText("");
+                txtUsername.requestFocusInWindow();
+            }
+            clearPasswordField(passwordChars);
+        });
+        loadingTimer.setRepeats(false);
+        loadingTimer.start();
+    }
+    
     private void cancelLogin() {
-        loggedInUser = null; // Set the user object to null
-         // Clear sensitive data from password field memory
-         java.util.Arrays.fill(txtPassword.getPassword(), ' ');
+        loggedInUser = null;
         dispose();
     }
-
-    // --- Method to get the logged-in USER (NhanVien) after dialog is closed ---
-    public NhanVien getLoggedInUser() { // Changed return type and method name
+    
+    public NhanVien getLoggedInUser() {
         return loggedInUser;
     }
-
-    // --- Action Methods for Features ---
+    
     private void openRegistrationDialog() {
-        // Pass the LoginDialog itself (this) as the owner
-        RegistrationDialog registrationDialog = new RegistrationDialog(this); // Pass 'this' (LoginDialog)
+        RegistrationDialog registrationDialog = new RegistrationDialog(this);
         registrationDialog.setVisible(true);
-
-        // This check runs after RegistrationDialog is closed
         if (registrationDialog.isRegistrationSuccessful()) {
-            // Optionally pre-fill username or just inform
             JOptionPane.showMessageDialog(this,
-                "Tài khoản đã được tạo thành công. Bạn có thể đăng nhập ngay bây giờ.",
-                "Đăng ký thành công", JOptionPane.INFORMATION_MESSAGE);
-            // You might want to clear password fields here after successful registration
-            txtUsername.setText(registrationDialog.getRegisteredUsername()); // Optionally pre-fill username
+                    "Tài khoản đã được tạo thành công. Bạn có thể đăng nhập ngay bây giờ.",
+                    "Đăng ký thành công", JOptionPane.INFORMATION_MESSAGE);
+            txtUsername.setText(registrationDialog.getRegisteredUsername());
             txtPassword.setText("");
         }
     }
-
+    
     private void openForgotPasswordDialog() {
-        // Pass the LoginDialog itself (this) as the owner
-        ForgotPasswordDialog forgotPasswordDialog = new ForgotPasswordDialog(this); // Pass 'this' (LoginDialog)
+        ForgotPasswordDialog forgotPasswordDialog = new ForgotPasswordDialog(this);
         forgotPasswordDialog.setVisible(true);
-
-        // This code runs after ForgotPasswordDialog is closed
-        // No action needed in LoginDialog based on ForgotPasswordDialog result here usually
+    }
+    
+    private boolean isValidUsername(String username) {
+        String usernameRegex = "^[a-zA-Z0-9_.]{4,20}$";
+        return username.matches(usernameRegex);
     }
 
+    private void clearPasswordField(char[] field) {
+        Arrays.fill(field, ' ');
+    }
 
-    // --- Main method: Application Entry Point ---
-    // This is the starting point of your application
-    // (Should be in MainApplicationFrame's main, but included here for standalone testing of LoginDialog)
-     public static void main(String[] args) {
-         SwingUtilities.invokeLater(() -> {
-             // Create a dummy owner frame for testing the dialog
-             JFrame ownerFrame = new JFrame("Login Dialog Test Owner");
-             ownerFrame.setSize(300, 200);
-             ownerFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-             // ownerFrame.setVisible(true); // Keep it invisible if you only want to see the dialog
-
-             LoginDialog loginDialog = new LoginDialog(ownerFrame); // Pass the dummy owner frame
-             loginDialog.setVisible(true);
-
-             // This code runs after the loginDialog is closed
-             // Changed from ACC account to NhanVien user and getLoggedInAccount() to getLoggedInUser()
-             NhanVien user = loginDialog.getLoggedInUser();
-             if (user != null) {
-                 System.out.println("Test login successful: " + user.getTendangnhap()); // Use Tendangnhap
-                 // Normally, you would then open the MainApplicationFrame here
-                 // MainApplicationFrame mainFrame = new MainApplicationFrame(user); // Pass the NhanVien user object
-                 // mainFrame.setVisible(true);
-             } else {
-                 System.out.println("Test login canceled or failed.");
-             }
-              // ownerFrame.dispose(); // Dispose the dummy frame
-              System.exit(0); // Exit the test application
-         });
-     }
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        SwingUtilities.invokeLater(() -> {
+            JFrame ownerFrame = new JFrame("Login Dialog Test Owner");
+            ownerFrame.setSize(300, 200);
+            ownerFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            
+            LoginDialog loginDialog = new LoginDialog(ownerFrame);
+            loginDialog.setVisible(true);
+            
+            NhanVien user = loginDialog.getLoggedInUser();
+            if (user != null) {
+                System.out.println("Test login successful: " + user.getTendangnhap());
+            } else {
+                System.out.println("Test login canceled or failed.");
+            }
+            
+            System.exit(0);
+        });
+    }
 }

@@ -1,121 +1,103 @@
 package ui;
 
-
 import model.NhanVien;
-
 import dao.NhanVienDAO;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays; // For clearing password char array
-
-// Import cho password hashing (RẤT QUAN TRỌNG cho bảo mật)
-// Bạn cần thêm một thư viện hashing như BCrypt hoặc Argon2 và lớp tiện ích tương ứng
-// import utils.PasswordHasher; // Ví dụ: import lớp PasswordHasher của bạn
-
+import java.sql.SQLException;
+import java.util.Arrays;
 
 public class RegistrationDialog extends JDialog {
 
-     // Define colors (reusing the palette)
-     Color coffeeBrown = new Color(102, 51, 0);
-     Color lightBeige = new Color(245, 245, 220);
-     Color accentGreen = new Color(60, 179, 113); // Color for Register button
-     Color darkGray = new Color(50, 50, 50);
-     Color linkColor = new Color(0, 102, 204);
+    Color coffeeBrown = new Color(102, 51, 0);
+    Color lightBeige = new Color(245, 245, 220);
+    Color accentGreen = new Color(60, 179, 113);
+    Color darkGray = new Color(50, 50, 50);
+    Color linkColor = new Color(0, 102, 204);
 
-    // UI Components (Input Fields)
-     private JTextField txtUsername; // maps to tendangnhap
-     private JPasswordField txtPassword; // maps to matkhau
-     private JPasswordField txtConfirmPassword;
-     private JTextField txtEmail; // maps to email
-     private JTextField txtDisplayName; // maps to TenNV (assuming display name is employee name)
-    // Loại bỏ JTextField txtPosition; // maps to Chucvu
-     // TODO: Add fields for Diachi, Gioitinh, SDT if registration includes full employee details
-     // private JTextField txtAddress;
-     // private JComboBox<String> cbGender; // Use JComboBox for gender
-     // private JTextField txtPhone;
+    private JTextField txtUsername;
+    private JPasswordField txtPassword;
+    private JPasswordField txtConfirmPassword;
+    private JTextField txtEmail;
+    private JTextField txtDisplayName;
+    private JTextField txtAddress;
+    private JComboBox<String> cbGender;
+    private JTextField txtPhone;
+    private JButton btnRegister;
+    private JButton btnCancel;
 
-
-     private JButton btnRegister;
-     private JButton btnCancel;
-
-    // Data Access Object - Change from ACCDAO to NhanVienDAO
     private NhanVienDAO nhanVienDAO;
     private boolean registrationSuccessful;
-     private String registeredUsername; // To pass back the registered username if successful
+    private String registeredUsername;
 
-
-    public RegistrationDialog(Window owner) { // Changed owner type to Window
-        super(owner, "Đăng ký tài khoản", Dialog.ModalityType.APPLICATION_MODAL); // Added ModalityType
+    public RegistrationDialog(Window owner) {
+        super(owner, "Đăng ký tài khoản", Dialog.ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-        // Initialize DAO - Initialize NhanVienDAO
         nhanVienDAO = new NhanVienDAO();
         registrationSuccessful = false;
 
-        // Set up the UI (similar to your existing code)
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20)); // Adjusted padding
+        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
         mainPanel.setBackground(lightBeige);
 
-        JPanel inputPanel = new JPanel(new GridLayout(0, 2, 10, 10)); // 2 columns, gap
+        JPanel inputPanel = new JPanel(new GridLayout(0, 2, 10, 10));
         inputPanel.setBackground(lightBeige);
 
-        // Add input fields (ensure names match the NhanVien properties you want to set)
+        // Tên đăng nhập
         inputPanel.add(new JLabel("Tên đăng nhập:", JLabel.RIGHT));
         txtUsername = new JTextField();
         inputPanel.add(txtUsername);
 
+        // Mật khẩu
         inputPanel.add(new JLabel("Mật khẩu:", JLabel.RIGHT));
         txtPassword = new JPasswordField();
         inputPanel.add(txtPassword);
 
+        // Xác nhận mật khẩu
         inputPanel.add(new JLabel("Xác nhận mật khẩu:", JLabel.RIGHT));
         txtConfirmPassword = new JPasswordField();
         inputPanel.add(txtConfirmPassword);
 
+        // Email
         inputPanel.add(new JLabel("Email:", JLabel.RIGHT));
         txtEmail = new JTextField();
         inputPanel.add(txtEmail);
 
-        inputPanel.add(new JLabel("Tên hiển thị:", JLabel.RIGHT)); // Mapear cho TenNV
+        // Tên hiển thị
+        inputPanel.add(new JLabel("Tên hiển thị:", JLabel.RIGHT));
         txtDisplayName = new JTextField();
         inputPanel.add(txtDisplayName);
 
-        // Loại bỏ thêm txtPosition vào inputPanel
-        // inputPanel.add(new JLabel("Chức vụ:", JLabel.RIGHT)); // Mapear cho Chucvu
-        // txtPosition = new JTextField(); // Or JComboBox if limited positions
-        // inputPanel.add(txtPosition);
+        // Địa chỉ
+        inputPanel.add(new JLabel("Địa chỉ:", JLabel.RIGHT));
+        txtAddress = new JTextField();
+        inputPanel.add(txtAddress);
 
-         // TODO: Add input fields for Diachi, Gioitinh, SDT if they are required for registration
-         // inputPanel.add(new JLabel("Địa chỉ:", JLabel.RIGHT));
-         // txtAddress = new JTextField();
-         // inputPanel.add(txtAddress);
+        // Giới tính
+        inputPanel.add(new JLabel("Giới tính:", JLabel.RIGHT));
+        cbGender = new JComboBox<>(new String[]{"Nam", "Nữ", "Khác"});
+        inputPanel.add(cbGender);
 
-         // inputPanel.add(new JLabel("Giới tính:", JLabel.RIGHT));
-         // cbGender = new JComboBox<>(new String[]{"Nam", "Nữ", "Khác"}); // Example JComboBox
-         // inputPanel.add(cbGender);
-
-         // inputPanel.add(new JLabel("SĐT:", JLabel.RIGHT));
-         // txtPhone = new JTextField();
-         // inputPanel.add(txtPhone);
-
+        // Số điện thoại
+        inputPanel.add(new JLabel("Số điện thoại:", JLabel.RIGHT));
+        txtPhone = new JTextField();
+        inputPanel.add(txtPhone);
 
         mainPanel.add(inputPanel, BorderLayout.CENTER);
 
-        // Button Panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(lightBeige);
 
         btnRegister = new JButton("Đăng ký");
-        styleButton(btnRegister, accentGreen, Color.WHITE); // Use accent green for Add/Register
+        styleButton(btnRegister, accentGreen, Color.WHITE);
         btnRegister.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                registerUser(); // Call the registration logic
+                registerUser();
             }
         });
         buttonPanel.add(btnRegister);
@@ -125,7 +107,7 @@ public class RegistrationDialog extends JDialog {
         btnCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cancelRegistration(); // Close the dialog
+                cancelRegistration();
             }
         });
         buttonPanel.add(btnCancel);
@@ -133,174 +115,207 @@ public class RegistrationDialog extends JDialog {
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         setContentPane(mainPanel);
-        pack(); // Adjusts window size to fit components
-        setLocationRelativeTo(owner); // Center relative to owner frame
-         setResizable(false); // Optional: Prevent resizing
+        pack();
+        setLocationRelativeTo(owner);
+        setResizable(false);
     }
 
-    // Helper method to style buttons (can be shared)
     private void styleButton(JButton button, Color bgColor, Color fgColor) {
         button.setBackground(bgColor);
         button.setForeground(fgColor);
         button.setFocusPainted(false);
         button.setBorder(BorderFactory.createCompoundBorder(
-                             BorderFactory.createLineBorder(fgColor, 1),
-                             BorderFactory.createEmptyBorder(5, 15, 5, 15)));
+                BorderFactory.createLineBorder(fgColor, 1),
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)));
         button.setOpaque(true);
         button.setBorderPainted(true);
         button.setFont(new Font("Arial", Font.BOLD, 12));
     }
 
-
     private void registerUser() {
         String username = txtUsername.getText().trim();
         char[] passwordChars = txtPassword.getPassword();
         char[] confirmPasswordChars = txtConfirmPassword.getPassword();
+        String password = new String(passwordChars);
+        String confirmPassword = new String(confirmPasswordChars);
         String email = txtEmail.getText().trim();
-        String displayName = txtDisplayName.getText().trim(); // Assuming this maps to TenNV
-        // Loại bỏ String position = txtPosition.getText().trim(); // Assuming this maps to Chucvu
+        String displayName = txtDisplayName.getText().trim();
+        String address = txtAddress.getText().trim();
+        String gender = (String) cbGender.getSelectedItem();
+        String phone = txtPhone.getText().trim();
 
-        // TODO: Get values from other fields if added (Diachi, Gioitinh, SDT)
-        // String address = txtAddress.getText().trim();
-        // String gender = (String) cbGender.getSelectedItem(); // Example for JComboBox
-        // String phone = txtPhone.getText().trim();
-
-
-        // Basic validation
-        if (username.isEmpty() || passwordChars.length == 0 || confirmPasswordChars.length == 0 || email.isEmpty() || displayName.isEmpty() ) { // Removed position check
-             JOptionPane.showMessageDialog(this, "Vui lòng điền đầy đủ thông tin (Tên đăng nhập, Mật khẩu, Xác nhận mật khẩu, Email, Tên hiển thị).", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
-             // Clear sensitive data from memory
-             Arrays.fill(passwordChars, ' ');
-             Arrays.fill(confirmPasswordChars, ' ');
+        // Validation
+        if (username.isEmpty() || passwordChars.length == 0 || confirmPasswordChars.length == 0 || 
+            email.isEmpty() || displayName.isEmpty() || address.isEmpty() || phone.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng điền đầy đủ tất cả thông tin.",
+                    "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+            clearPasswordFields(passwordChars, confirmPasswordChars);
             return;
         }
-        if (!Arrays.equals(passwordChars, confirmPasswordChars)) {
-            JOptionPane.showMessageDialog(this, "Mật khẩu và xác nhận mật khẩu không khớp.", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+
+        if (!isValidUsername(username)) {
+            JOptionPane.showMessageDialog(this, "Tên đăng nhập phải có độ dài 4-20 ký tự và chỉ chứa chữ cái, số, _ hoặc .",
+                    "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+            txtUsername.setText("");
+            clearPasswordFields(passwordChars, confirmPasswordChars);
+            txtUsername.requestFocusInWindow();
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            JOptionPane.showMessageDialog(this, "Email không hợp lệ. Vui lòng nhập đúng định dạng (ví dụ: example@domain.com).",
+                    "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+            txtEmail.setText("");
+            clearPasswordFields(passwordChars, confirmPasswordChars);
+            txtEmail.requestFocusInWindow();
+            return;
+        }
+
+        if (!password.equals(confirmPassword)) {
+            JOptionPane.showMessageDialog(this, "Mật khẩu và xác nhận mật khẩu không khớp.",
+                    "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
             txtPassword.setText("");
             txtConfirmPassword.setText("");
-             // Clear sensitive data from memory
-             Arrays.fill(passwordChars, ' ');
-             Arrays.fill(confirmPasswordChars, ' ');
+            clearPasswordFields(passwordChars, confirmPasswordChars);
+            txtPassword.requestFocusInWindow();
             return;
         }
 
-        // TODO: Add more validation (email format, phone format, etc.)
+        if (!isValidPassword(password)) {
+            JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ cái in hoa, chữ cái thường và số.",
+                    "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+            txtPassword.setText("");
+            txtConfirmPassword.setText("");
+            clearPasswordFields(passwordChars, confirmPasswordChars);
+            txtPassword.requestFocusInWindow();
+            return;
+        }
 
-        // --- Check if username or email already exists ---
-         if (nhanVienDAO.isUsernameExists(username)) {
-              JOptionPane.showMessageDialog(this, "Tên đăng nhập '" + username + "' đã tồn tại.", "Lỗi đăng ký", JOptionPane.WARNING_MESSAGE);
-               // Clear sensitive data from memory
-              Arrays.fill(passwordChars, ' ');
-              Arrays.fill(confirmPasswordChars, ' ');
-              return;
-         }
-          if (nhanVienDAO.isEmailExists(email)) {
-              JOptionPane.showMessageDialog(this, "Email '" + email + "' đã được sử dụng.", "Lỗi đăng ký", JOptionPane.WARNING_MESSAGE);
-               // Clear sensitive data from memory
-              Arrays.fill(passwordChars, ' ');
-              Arrays.fill(confirmPasswordChars, ' ');
-              return;
-         }
+        if (!isValidPhone(phone)) {
+            JOptionPane.showMessageDialog(this, "Số điện thoại phải là dãy 10-11 số (chỉ chứa số).",
+                    "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
+            txtPhone.setText("");
+            clearPasswordFields(passwordChars, confirmPasswordChars);
+            txtPhone.requestFocusInWindow();
+            return;
+        }
 
+        if (nhanVienDAO.isUsernameExists(username)) {
+            JOptionPane.showMessageDialog(this, "Tên đăng nhập '" + username + "' đã tồn tại.",
+                    "Lỗi đăng ký", JOptionPane.WARNING_MESSAGE);
+            txtUsername.setText("");
+            clearPasswordFields(passwordChars, confirmPasswordChars);
+            return;
+        }
 
-        // Create a NhanVien object with the collected data
+        if (nhanVienDAO.isEmailExists(email)) {
+            JOptionPane.showMessageDialog(this, "Email '" + email + "' đã được sử dụng.",
+                    "Lỗi đăng ký", JOptionPane.WARNING_MESSAGE);
+            txtEmail.setText("");
+            clearPasswordFields(passwordChars, confirmPasswordChars);
+            return;
+        }
+
         NhanVien newNhanVien = new NhanVien();
-        // MaNV will be generated by DAO
-        newNhanVien.setTenNV(displayName); // Set employee name
-        // TODO: Set Diachi, Gioitinh, SDT if added to UI
-        // newNhanVien.setDiachi(address);
-        // newNhanVien.setGioitinh(gender);
-        // newNhanVien.setSDT(phone);
-
-        // Set account details
+        newNhanVien.setTenNV(displayName);
+        newNhanVien.setDiachi(address);
+        newNhanVien.setGioitinh(gender);
+        newNhanVien.setSDT(phone);
         newNhanVien.setTendangnhap(username);
-        // TODO: Hash the password before setting it in the object!
-        // String hashedPassword = PasswordHasher.hashPassword(new String(passwordChars));
-        // newNhanVien.setMatkhau(hashedPassword);
-        newNhanVien.setMatkhau(new String(passwordChars)); // TEMPORARY: Storing plain text or pre-hashed
-
-
+        newNhanVien.setMatkhau(password);
         newNhanVien.setEmail(email);
-        // Loại bỏ newNhanVien.setChucvu(position);
-        // TODO: Set a default role or select role in UI if needed
-        newNhanVien.setRole("Staff"); // Example: Default role is Staff
+        newNhanVien.setRole("Staff");
 
-
-        // Add the new NhanVien to the database using NhanVienDAO
         try {
             boolean success = nhanVienDAO.addNhanVien(newNhanVien);
-
             if (success) {
-                 JOptionPane.showMessageDialog(this,
-                     "Đăng ký nhân viên và tài khoản thành công! Bạn có thể đăng nhập.",
-                     "Đăng ký thành công", JOptionPane.INFORMATION_MESSAGE);
-
+                JOptionPane.showMessageDialog(this,
+                        "Đăng ký nhân viên và tài khoản thành công! Bạn có thể đăng nhập.",
+                        "Đăng ký thành công", JOptionPane.INFORMATION_MESSAGE);
                 registrationSuccessful = true;
-                registeredUsername = username; // Store username to pass back
+                registeredUsername = username;
                 dispose();
             } else {
-                // addNhanVien already prints error to console, but maybe show a generic UI error
                 JOptionPane.showMessageDialog(this,
-                    "Có lỗi xảy ra khi đăng ký. Vui lòng kiểm tra log hoặc thử lại.",
-                    "Lỗi đăng ký", JOptionPane.ERROR_MESSAGE);
-                // If DAO returns false, it might be a unique constraint violation (username/email exists)
-                // You might want to add more specific error handling based on DAO return/exceptions
+                        "Có lỗi xảy ra khi đăng ký. Vui lòng thử lại hoặc kiểm tra log.",
+                        "Lỗi đăng ký", JOptionPane.ERROR_MESSAGE);
             }
-
-
-        } catch (Exception ex) { // Catching generic exception, you might catch SQLException specifically
-            JOptionPane.showMessageDialog(this,
-                "Có lỗi xảy ra khi đăng ký: " + ex.getMessage(),
-                "Lỗi đăng ký", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException ex) {
+            if (ex.getErrorCode() == 515) {
+                JOptionPane.showMessageDialog(this,
+                        "Lỗi: Không thể thêm nhân viên do thiếu mã nhân viên (MaNV). Vui lòng kiểm tra cấu hình cơ sở dữ liệu.",
+                        "Lỗi CSDL", JOptionPane.ERROR_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Lỗi CSDL: " + ex.getMessage(),
+                        "Lỗi đăng ký", JOptionPane.ERROR_MESSAGE);
+            }
             ex.printStackTrace();
         } finally {
-             // Always clear sensitive data from memory
-             Arrays.fill(passwordChars, ' ');
-             Arrays.fill(confirmPasswordChars, ' ');
+            clearPasswordFields(passwordChars, confirmPasswordChars);
         }
     }
 
-
     private void cancelRegistration() {
-        registrationSuccessful = false; // Ensure this is false on cancel
-         registeredUsername = null; // Clear username on cancel
-         // Clear sensitive data from password field memory
-         Arrays.fill(txtPassword.getPassword(), ' ');
-         Arrays.fill(txtConfirmPassword.getPassword(), ' ');
+        registrationSuccessful = false;
+        registeredUsername = null;
+        clearPasswordFields(txtPassword.getPassword(), txtConfirmPassword.getPassword());
         dispose();
     }
 
-    // Method to check if registration was successful
     public boolean isRegistrationSuccessful() {
         return registrationSuccessful;
     }
 
-     // Method to get the registered username (useful for pre-filling login form)
-     public String getRegisteredUsername() {
-         return registeredUsername;
-     }
+    public String getRegisteredUsername() {
+        return registeredUsername;
+    }
 
+    private boolean isValidUsername(String username) {
+        String usernameRegex = "^[a-zA-Z0-9_.]{4,20}$";
+        return username.matches(usernameRegex);
+    }
 
-    // For testing - Should be commented out or removed in production
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        return email.matches(emailRegex);
+    }
 
-     public static void main(String[] args) {
-         SwingUtilities.invokeLater(() -> {
-             JFrame frame = new JFrame("Test Owner Frame");
-             frame.setSize(800, 600);
-             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    private boolean isValidPassword(String password) {
+        if (password.length() < 6) return false;
+        boolean hasUpperCase = !password.equals(password.toLowerCase());
+        boolean hasLowerCase = !password.equals(password.toUpperCase());
+        boolean hasDigit = password.matches(".*\\d.*");
+        return hasUpperCase && hasLowerCase && hasDigit;
+    }
 
-             RegistrationDialog dialog = new RegistrationDialog(frame);
-             dialog.setVisible(true);
+    private boolean isValidPhone(String phone) {
+        String phoneRegex = "^[0-9]{10,11}$";
+        return phone.matches(phoneRegex);
+    }
 
-             if (dialog.isRegistrationSuccessful()) {
-                 System.out.println("Registration successful for user: " + dialog.getRegisteredUsername());
-             } else {
-                 System.out.println("Registration canceled or failed");
-             }
+    private void clearPasswordFields(char[]... fields) {
+        for (char[] field : fields) {
+            Arrays.fill(field, ' ');
+        }
+    }
 
-              // frame.dispose(); // Dispose the test frame if not exiting
-              System.exit(0); // Exit the test application
-         });
-     }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Test Owner Frame");
+            frame.setSize(800, 600);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+            RegistrationDialog dialog = new RegistrationDialog(frame);
+            dialog.setVisible(true);
+
+            if (dialog.isRegistrationSuccessful()) {
+                System.out.println("Registration successful for user: " + dialog.getRegisteredUsername());
+            } else {
+                System.out.println("Registration canceled or failed");
+            }
+
+            System.exit(0);
+        });
+    }
 }

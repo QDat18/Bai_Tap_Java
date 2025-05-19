@@ -1,13 +1,12 @@
 package ui;
 
-// Import NhanVien thay vì ACC
 import dao.DatabaseConnection;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter; // Cần import
-import java.awt.event.WindowEvent; // Cần import
-import java.awt.image.BufferedImage; // Cần import
+import java.awt.event.WindowAdapter; 
+import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.File; // Cần import
 import java.sql.SQLException;
 import java.util.HashMap; // Cần import nếu tải từ file
@@ -17,10 +16,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder; // Cần import
 import model.NhanVien;
 
-/**
- * Cửa sổ chính của ứng dụng quản lý cửa hàng cà phê.
- * Chứa các panel chức năng và điều hướng giữa chúng, có phân quyền theo vai trò của NhanVien.
- */
 public class MainApplicationFrame extends JFrame {
 
     // Định nghĩa màu sắc sử dụng trong giao diện
@@ -45,6 +40,7 @@ public class MainApplicationFrame extends JFrame {
 
     // Thông tin nhân viên đã đăng nhập
     private NhanVien loggedInUser;
+    private SanPhamUI sanphamUI;
 
     // Map để lưu các panel UI chức năng và tên tương ứng trên menu
     private Map<String, JPanel> uiPanels;
@@ -63,7 +59,6 @@ public class MainApplicationFrame extends JFrame {
          "Quản lý Loại sản phẩm",
          "Quản lý Hóa đơn Nhập",
          "Thống kê và Báo cáo"
-         // Không bao gồm "Quản lý Tài khoản" vì thông tin tài khoản được quản lý trong NhanVien
     };
 
 
@@ -77,11 +72,10 @@ public class MainApplicationFrame extends JFrame {
 
         // JFrame setup
         setTitle("Hệ thống Quản lý Cửa hàng Cà phê");
-        // Xử lý việc đóng cửa sổ bằng WindowListener để hỏi người dùng xác nhận thoát
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setSize(1200, 800); // Kích thước cửa sổ mặc định
+        setSize(1500, 800); // Kích thước cửa sổ mặc định
         setLocationRelativeTo(null); // Căn giữa cửa sổ
-        setMinimumSize(new Dimension(800, 600)); // Đặt kích thước tối thiểu
+        setMinimumSize(new Dimension(1400, 1000)); // Đặt kích thước tối thiểu
 
         // Sử dụng BorderLayout cho panel nội dung chính của Frame
         JPanel mainContentPane = new JPanel(new BorderLayout());
@@ -98,23 +92,18 @@ public class MainApplicationFrame extends JFrame {
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0)); // Dùng FlowLayout xếp ngang
         titlePanel.setBackground(coffeeBrown); // Nền trùng với header
 
-        // Thêm logo (ưu tiên tải từ resources)
         lblLogo = new JLabel(); // Khởi tạo Label cho logo
-        loadLogoFromResources("/assets/logo/logo.png"); // <-- Gọi phương thức tải logo từ resources (thay đổi đường dẫn nếu cần)
-        // Nếu không tải được từ resources, có thể thử tải từ file:
-        // if (lblLogo.getIcon() == null && lblLogo.getText().equals("Logo N/A")) {
-        //     loadLogo("D:\\KyIV_HocVienNganHang\\WebDesign\\BTL_web\\assets\\logo\\logo.png"); // <-- Thay bằng đường dẫn file thực tế
-        // }
+        loadLogoFromResources("/images/logo.png"); // <-- Gọi phương thức tải logo từ resources (thay đổi đường dẫn nếu cần)
         titlePanel.add(lblLogo); // Thêm logo vào titlePanel
 
 
-        lblAppTitle = new JLabel("<html><b><font color='white' size='+1'>Hệ thống Quản lý Cửa hàng Cà phê</font></b></html>"); // Tiêu đề ứng dụng
+        lblAppTitle = new JLabel("<html><b><font color='white' size='+1'>Cửa hàng Cà phê THE COFFEE TEAM</font></b></html>"); // Tiêu đề ứng dụng
         lblAppTitle.setForeground(Color.WHITE); // Màu chữ tiêu đề
         lblAppTitle.setFont(new Font("Arial", Font.BOLD, 18)); // Font tiêu đề
         titlePanel.add(lblAppTitle); // Thêm tiêu đề vào titlePanel
 
 
-        headerPanel.add(titlePanel, BorderLayout.WEST); // TitlePanel ở bên trái header
+        headerPanel.add(titlePanel, BorderLayout.CENTER);
 
         // Phần bên phải của header: Thông tin người dùng và nút Đăng xuất
         JPanel userInfoPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0)); // Dùng FlowLayout xếp ngang và căn phải
@@ -288,13 +277,14 @@ public class MainApplicationFrame extends JFrame {
      * Panel được thêm vào contentPanel với tên mục menu làm "card identifier".
      */
     private void createMenuButtons() {
+        SanPhamUI sanphamUI = new SanPhamUI(loggedInUser);
         // Clear existing panels from the map and contentPanel before adding new ones
         uiPanels.clear(); // Xóa các panel cũ trong map
         contentPanel.removeAll(); // Xóa tất cả các panel khỏi contentPanel
 
         // Khởi tạo các panel UI chức năng và thêm vào map uiPanels
         // Truyền đối tượng NhanVien đăng nhập vào constructor của các panel nếu cần
-        uiPanels.put("Trang chủ", new HomePanel(this.loggedInUser)); // Giả định HomePanel nhận NhanVien
+        uiPanels.put("Trang chủ", new HomePanel(this.loggedInUser, sanphamUI)); // Giả định HomePanel nhận NhanVien
         // Bạn cần đảm bảo các lớp UI này tồn tại và có constructor phù hợp
          try {
               uiPanels.put("Quản lý Sản phẩm", new SanPhamUI(this.loggedInUser)); // Giả định SanPhamUI nhận NhanVien
@@ -302,7 +292,7 @@ public class MainApplicationFrame extends JFrame {
               uiPanels.put("Quản lý Khách hàng", new KhachHangUI(this.loggedInUser)); // Giả định KhachHangUI nhận NhanVien
               uiPanels.put("Quản lý Nhà cung cấp", new NhaCungCapUI(this.loggedInUser)); // Giả định NhaCungCapUI nhận NhanVien
               uiPanels.put("Quản lý Nhân viên", new NhanVienUI(this.loggedInUser)); // Giả định NhanVienUI nhận NhanVien
-              uiPanels.put("Quản lý Hóa đơn Bán", new HoaDonBanUI(this.loggedInUser)); // Giả định HoaDonBanUI nhận NhanVien
+              uiPanels.put("Quản lý Hóa đơn Bán", new HoaDonBanUI(this.loggedInUser, sanphamUI)); // Giả định HoaDonBanUI nhận NhanVien
               uiPanels.put("Quản lý Loại sản phẩm", new LoaiUI(this.loggedInUser)); // Giả định LoaiUI nhận NhanVien
               uiPanels.put("Quản lý Hóa đơn Nhập", new HoaDonNhapUI(this.loggedInUser)); // Giả định HoaDonNhapUI nhận NhanDonNhapUI nhận NhanVien
          } catch (Exception e) {
@@ -364,15 +354,7 @@ public class MainApplicationFrame extends JFrame {
                          cardLayout.show(contentPanel, menuName); // Hiển thị panel tương ứng dùng CardLayout
                          highlightMenuButton(menuName); // Highlight nút menu được chọn
 
-                          // Tùy chọn: Nếu panel cần refresh dữ liệu khi được hiển thị, gọi phương thức loadData() của nó
-                          // JPanel currentPanelInstance = uiPanels.get(menuName);
-                          // if (currentPanelInstance instanceof YourPanelInterfaceWithLoadData) {
-                          //      ((YourPanelInterfaceWithLoadData) currentPanelInstance).loadData();
-                          // }
-
                      } else {
-                         // Logic này chỉ phòng trường hợp nút được hiển thị do lỗi logic phân quyền,
-                         // nhưng isPanelAccessible() ở showPanel() cũng đã kiểm tra.
                          JOptionPane.showMessageDialog(this, "Bạn không có quyền truy cập chức năng này.", "Lỗi Phân quyền", JOptionPane.WARNING_MESSAGE);
                      }
                 });
@@ -671,7 +653,6 @@ public class MainApplicationFrame extends JFrame {
     public static void main(String[] args) {
         // Chạy giao diện trên Event Dispatch Thread (luồng xử lý sự kiện của Swing)
         SwingUtilities.invokeLater(() -> {
-            // --- Giai đoạn 1: Kiểm tra kết nối CSDL (Nên làm trước đăng nhập) ---
             System.out.println("Testing Database Connection...");
             try (java.sql.Connection conn = DatabaseConnection.getConnection()) { // Sử dụng try-with-resources để tự động đóng kết nối
                 if (conn != null) {
@@ -692,28 +673,17 @@ public class MainApplicationFrame extends JFrame {
                 JOptionPane.showMessageDialog(null, "Đã xảy ra lỗi khi kiểm tra kết nối CSDL: " + e.getMessage(), "Lỗi Kết nối CSDL", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
-
-            // --- Giai đoạn 2: Đăng nhập ---
-            // Hiển thị cửa sổ đăng nhập và chờ kết quả
             System.out.println("\nOpening Login Dialog...");
-            // Tạo LoginDialog với owner là null vì nó là cửa sổ đầu tiên
             LoginDialog loginDialog = new LoginDialog(null);
             loginDialog.setVisible(true); // Hiển thị Login Dialog (dialog modal sẽ chặn luồng đến đây)
-
-            // Sau khi Login Dialog đóng, kiểm tra kết quả đăng nhập
-            // Giả định LoginDialog có phương thức getLoggedInUser() trả về NhanVien hoặc null
             NhanVien loggedInUser = loginDialog.getLoggedInUser();
 
             if (loggedInUser != null) {
-                // Nếu đăng nhập thành công
                 System.out.println("Login successful for user: " + loggedInUser.getTendangnhap() + " (Role: " + loggedInUser.getRole() + ")");
-                // --- Giai đoạn 3: Khởi chạy Main Application Frame ---
                 System.out.println("Launching Main Application Frame...");
-                // Tạo và hiển thị cửa sổ ứng dụng chính, truyền đối tượng NhanVien đã đăng nhập
                  try {
                      MainApplicationFrame mainFrame = new MainApplicationFrame(loggedInUser);
-                     // mainFrame.setVisible(true); // Đã được gọi ở cuối constructor của MainApplicationFrame
+                     mainFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
                  } catch (Throwable e) { // Bắt Throwable để báo cáo lỗi nếu có vấn đề trong quá trình khởi tạo UI Frame
                       System.err.println("Error launching Main Application Frame:");
                       e.printStackTrace();

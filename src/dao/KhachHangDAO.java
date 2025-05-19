@@ -14,13 +14,13 @@ public class KhachHangDAO {
 
     // Phương thức thêm khách hàng
     public void addKhachHang(KhachHang khachHang) {
-        String sql = "INSERT INTO KhachHang (MaKH, Tenkhach, Diachi) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO KhachHang (MaKH, Tenkhach, SDT) VALUES (?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, khachHang.getMaKH());
             pstmt.setString(2, khachHang.getTenkhach());
-            pstmt.setString(3, khachHang.getDiachi());
+            pstmt.setString(3, khachHang.getSDT());
 
             pstmt.executeUpdate();
             System.out.println("Thêm khách hàng thành công: " + khachHang.getTenkhach());
@@ -32,12 +32,12 @@ public class KhachHangDAO {
 
     // Phương thức cập nhật thông tin khách hàng
     public void updateKhachHang(KhachHang khachHang) {
-        String sql = "UPDATE KhachHang SET Tenkhach = ?, Diachi = ? WHERE MaKH = ?";
+        String sql = "UPDATE KhachHang SET Tenkhach = ?, SDT = ? WHERE MaKH = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, khachHang.getTenkhach());
-            pstmt.setString(2, khachHang.getDiachi());
+            pstmt.setString(2, khachHang.getSDT());
             pstmt.setString(3, khachHang.getMaKH());
 
             int affectedRows = pstmt.executeUpdate();
@@ -84,7 +84,7 @@ public class KhachHangDAO {
                 KhachHang khachHang = new KhachHang();
                 khachHang.setMaKH(rs.getString("MaKH"));
                 khachHang.setTenkhach(rs.getString("Tenkhach"));
-                khachHang.setDiachi(rs.getString("Diachi"));
+                khachHang.setSDT(rs.getString("SDT"));
                 danhSachKhachHang.add(khachHang);
             }
         } catch (SQLException e) {
@@ -108,7 +108,7 @@ public class KhachHangDAO {
                     khachHang = new KhachHang();
                     khachHang.setMaKH(rs.getString("MaKH"));
                     khachHang.setTenkhach(rs.getString("Tenkhach"));
-                    khachHang.setDiachi(rs.getString("Diachi"));
+                    khachHang.setSDT(rs.getString("SDT"));
                 }
             }
         } catch (SQLException e) {
@@ -132,7 +132,7 @@ public class KhachHangDAO {
                     KhachHang kh = new KhachHang();
                     kh.setMaKH(rs.getString("MaKH"));
                     kh.setTenkhach(rs.getString("Tenkhach"));
-                    kh.setDiachi(rs.getString("Diachi"));
+                    kh.setSDT(rs.getString("SDT"));
                     danhSachKhachHang.add(kh);
                 }
             }
@@ -145,7 +145,7 @@ public class KhachHangDAO {
 
     // Phương thức đề xuất mã khách hàng tiếp theo
     public String suggestNextMaKH() {
-        String nextMaKH = "KH001"; // Giá trị mặc định nếu không có dữ liệu
+        String nextMaKH = "KH01";
         String sql = "SELECT MAX(MaKH) AS maxMaKH FROM KhachHang";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -203,5 +203,34 @@ public class KhachHangDAO {
             return -1;
         }
         return count;
+    }
+
+    public String getLastMaKH() {
+        String sql = "SELECT TOP 1 MaKH FROM KhachHang ORDER BY MaKH DESC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getString("MaKH");
+            }
+            return null;
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy mã khách hàng cuối: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public boolean saveKhachHang(KhachHang kh) {
+        String sql = "INSERT INTO KhachHang (MaKH, Tenkhach, SDT) VALUES (?, ?, ?)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, kh.getMaKH());
+            pstmt.setString(2, kh.getTenkhach());
+            pstmt.setString(3, kh.getSDT());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lưu khách hàng: " + e.getMessage());
+            return false;
+        }
     }
 }

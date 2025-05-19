@@ -38,7 +38,7 @@ public class KhachHangUI extends JPanel {
     // UI Components
     private JTextField txtMaKH;
     private JTextField txtTenkhach;
-    private JTextField txtDiachi;
+    private JTextField txtSDT;
     private JButton btnAdd;
     private JButton btnUpdate;
     private JButton btnDelete;
@@ -228,7 +228,7 @@ public class KhachHangUI extends JPanel {
         fieldsPanel.add(Box.createVerticalStrut(15));
         fieldsPanel.add(createFormField("Tên khách hàng:", txtTenkhach = new JTextField()));
         fieldsPanel.add(Box.createVerticalStrut(15));
-        fieldsPanel.add(createFormField("Địa chỉ:", txtDiachi = new JTextField()));
+        fieldsPanel.add(createFormField("Địa chỉ:", txtSDT = new JTextField()));
 
         // Add vertical glue to push fields to the top
         fieldsPanel.add(Box.createVerticalGlue());
@@ -350,7 +350,7 @@ public class KhachHangUI extends JPanel {
                 tableModel.addRow(new Object[]{
                     kh.getMaKH(),
                     kh.getTenkhach(),
-                    kh.getDiachi()
+                    kh.getSDT()
                 });
             }
         } else {
@@ -365,7 +365,7 @@ public class KhachHangUI extends JPanel {
         if (currentKhachHang != null) {
             txtMaKH.setText(currentKhachHang.getMaKH());
             txtTenkhach.setText(currentKhachHang.getTenkhach());
-            txtDiachi.setText(currentKhachHang.getDiachi());
+            txtSDT.setText(currentKhachHang.getSDT());
             updateButtonState();
         } else {
             clearForm();
@@ -378,7 +378,7 @@ public class KhachHangUI extends JPanel {
         String suggestedMaKH = khachHangDAO.suggestNextMaKH();
         txtMaKH.setText(suggestedMaKH);
         txtTenkhach.setText("");
-        txtDiachi.setText("");
+        txtSDT.setText("");
         currentKhachHang = null;
         khachHangTable.clearSelection();
         updateButtonState();
@@ -387,10 +387,10 @@ public class KhachHangUI extends JPanel {
     private void addKhachHang() throws SQLException {
         String maKH = txtMaKH.getText().trim();
         String tenKhach = txtTenkhach.getText().trim();
-        String diachi = txtDiachi.getText().trim();
+        String SDT = txtSDT.getText().trim();
 
         // Basic validation
-        if (maKH.isEmpty() || tenKhach.isEmpty() || diachi.isEmpty()) {
+        if (maKH.isEmpty() || tenKhach.isEmpty() || SDT.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng điền đầy đủ thông tin khách hàng.", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -401,7 +401,7 @@ public class KhachHangUI extends JPanel {
             return;
         }
 
-        KhachHang newKhachHang = new KhachHang(maKH, tenKhach, diachi);
+        KhachHang newKhachHang = new KhachHang(maKH, tenKhach, SDT);
         khachHangDAO.addKhachHang(newKhachHang);
         JOptionPane.showMessageDialog(this, "Thêm khách hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
         loadKhachHangTable();
@@ -416,15 +416,15 @@ public class KhachHangUI extends JPanel {
 
         String maKH = currentKhachHang.getMaKH();
         String tenKhach = txtTenkhach.getText().trim();
-        String diachi = txtDiachi.getText().trim();
+        String SDT = txtSDT.getText().trim();
 
-        if (tenKhach.isEmpty() || diachi.isEmpty()) {
+        if (tenKhach.isEmpty() || SDT.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Vui lòng điền đầy đủ thông tin khách hàng.", "Lỗi nhập liệu", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         currentKhachHang.setTenkhach(tenKhach);
-        currentKhachHang.setDiachi(diachi);
+        currentKhachHang.setSDT(SDT);
 
         khachHangDAO.updateKhachHang(currentKhachHang);
         JOptionPane.showMessageDialog(this, "Cập nhật khách hàng thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
@@ -482,7 +482,7 @@ public class KhachHangUI extends JPanel {
                     tableModel.addRow(new Object[]{
                         kh.getMaKH(),
                         kh.getTenkhach(),
-                        kh.getDiachi()
+                        kh.getSDT()
                     });
                 }
                 if (searchResult.size() == 1 && "Mã KH".equals(searchType)) {

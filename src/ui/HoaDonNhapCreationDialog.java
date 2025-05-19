@@ -70,15 +70,16 @@ public class HoaDonNhapCreationDialog extends JDialog {
     private DecimalFormat currencyFormatter = new DecimalFormat("#,##0"); // Format without VNĐ initially for parsing
 
     private boolean savedSuccessfully = false; // Flag to indicate successful save
+    private SanPhamUI sanPhamUI;
 
     // Constructor
     // Nhận Frame cha và thông tin nhân viên tạo hóa đơn (MaNV, TenNV)
-    public HoaDonNhapCreationDialog(Frame owner, String employeeMaNV, String employeeTenNV) {
+    public HoaDonNhapCreationDialog(Frame owner, String employeeMaNV, String employeeTenNV, SanPhamUI sanPhamUI) {
         super(owner, "Tạo Hóa đơn Nhập mới", true); // Modal dialog
 
         this.employeeMaNV = employeeMaNV; // Gán MaNV nhân viên tạo hóa đơn
         this.employeeTenNV = employeeTenNV; // Gán TenNV nhân viên tạo hóa đơn
-
+        this.sanPhamUI = sanPhamUI;
         // Initialize DAOs
         hoaDonNhapDAO = new HoaDonNhapDAO();
         // chiTietHoaDonNhapDAO = new ChiTietHoaDonNhapDAO(); // Khởi tạo ở HoaDonNhapDAO transaction
@@ -714,32 +715,34 @@ public class HoaDonNhapCreationDialog extends JDialog {
              // and implemented DAO methods (getAllNhanVien, getAllNhaCC, getAllSanPham, generateNextHoaDonNhapCode, saveHoaDonNhapTransaction, getSanPhamById).
 
              // Pass a dummy MaNV and TenNV for testing
-             String dummyMaNV = "NV01"; // Replace with a valid MaNV from your NhanVien table for testing
-             String dummyTenNV = "Test Employee"; // Replace with corresponding TenNV
+    //          String dummyMaNV = "NV01"; // Replace with a valid MaNV from your NhanVien table for testing
+    //          String dummyTenNV = "Test Employee"; // Replace with corresponding TenNV
 
-             if (new NhanVienDAO().getNhanVienById(dummyMaNV) == null) {
-                  System.err.println("Lỗi: Không tìm thấy nhân viên với Mã NV '" + dummyMaNV + "'. Vui lòng cập nhật MaNV trong main method để test.");
-                  return; // Stop if dummy employee not found
-             }
+    //          if (new NhanVienDAO().getNhanVienById(dummyMaNV) == null) {
+    //               System.err.println("Lỗi: Không tìm thấy nhân viên với Mã NV '" + dummyMaNV + "'. Vui lòng cập nhật MaNV trong main method để test.");
+    //               return; // Stop if dummy employee not found
+    //          }
 
 
-             JFrame dummyFrame = new JFrame(); // Dummy owner frame
-             dummyFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-             dummyFrame.setSize(100, 100); // Minimal size
-             dummyFrame.setVisible(false); // Keep hidden
+    //          JFrame dummyFrame = new JFrame(); // Dummy owner frame
+    //          dummyFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    //          dummyFrame.setSize(100, 100); // Minimal size
+    //          dummyFrame.setVisible(false); // Keep hidden
 
-             HoaDonNhapCreationDialog dialog = new HoaDonNhapCreationDialog(dummyFrame, dummyMaNV, dummyTenNV);
-             dialog.setVisible(true);
+    //         //  HoaDonNhapCreationDialog dialog = new HoaDonNhapCreationDialog(dummyFrame, dummyMaNV, dummyTenNV);
+    //          dialog.setVisible(true);
 
-             // After dialog is closed, check if it was saved (optional in test main)
-             if (dialog.isSavedSuccessfully()) {
-                 System.out.println("Dialog closed successfully after saving.");
-             } else {
-                  System.out.println("Dialog closed, save was not successful or cancelled.");
-             }
+    //          // After dialog is closed, check if it was saved (optional in test main)
+    //          if (dialog.isSavedSuccessfully()) {
+    //              System.out.println("Dialog closed successfully after saving.");
+    //          } else {
+    //               System.out.println("Dialog closed, save was not successful or cancelled.");
+    //          }
 
-             // dummyFrame.dispose(); // Dispose dummy frame
-        });
-    }
+    //          // dummyFrame.dispose(); // Dispose dummy frame
+    //     });
+    // }
 
+    });
+}
 }

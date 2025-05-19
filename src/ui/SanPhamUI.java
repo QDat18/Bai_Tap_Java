@@ -609,33 +609,28 @@ public class SanPhamUI extends JPanel {
     /**
      * Loads all SanPham data from the DAO and populates the product table.
      */
-    private void loadProductTable() {
-        tableModel.setRowCount(0); // Clear existing data
-        // Assuming getAllSanPham exists and returns List<SanPham> with Maloai and Anh
+    public void loadProductTable() {
+        tableModel.setRowCount(0); // Xóa dữ liệu hiện tại
         List<SanPham> danhSach = sanPhamDAO.getAllSanPham();
         if (danhSach != null) {
             for (SanPham sp : danhSach) {
                 tableModel.addRow(new Object[]{
                     sp.getMaSP(),
                     sp.getTenSP(),
-                    sp.getMaloai(), // Display Maloai in table (or Tenloai if you join with Loai table in DAO)
+                    sp.getMaloai(),
                     sp.getGianhap(),
                     sp.getGiaban(),
                     sp.getSoluong(),
-                    sp.getAnh() // Display image path
+                    sp.getAnh()
                 });
             }
         } else {
-            System.out.println("Không lấy được dữ liệu sản phẩm từ CSDL.");
-            JOptionPane.showMessageDialog(this, "Không thể tải dữ liệu sản phẩm từ CSDL.", "Lỗi CSDL", JOptionPane.ERROR_MESSAGE);
-            // Optional: Add some placeholder data if DAO returns null or empty list
-            // tableModel.addRow(new Object[]{"SP001", "Sample Product", "CF", 10000, 15000, 50, "path/to/image.jpg"});
+            JOptionPane.showMessageDialog(this, "Không thể tải dữ liệu sản phẩm từ CSDL.", 
+                "Lỗi CSDL", JOptionPane.ERROR_MESSAGE);
         }
-
-        // After loading table, re-apply permissions to ensure edit/delete buttons are correctly enabled/disabled
         applyRolePermissions();
-        clearInputFields(); // Clear input fields after loading
-        productTable.clearSelection(); // Clear table selection
+        clearInputFields();
+        productTable.clearSelection();
     }
 
     /**

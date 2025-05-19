@@ -1,11 +1,20 @@
 package ui;
 
 import dao.HoaDonNhapDAO;
-import dao.NhaCCDAO; // Cần cho tìm kiếm/hiển thị tên NCC
-import dao.NhanVienDAO; // Cần cho tìm kiếm/hiển thị tên NV
-import java.awt.*;
+import dao.NhaCCDAO;
+import dao.NhanVienDAO;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.FileOutputStream;
+import java.io.File;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,168 +25,133 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import model.HoaDonNhap;
-import model.NhanVien; // Sử dụng model NhanVien mới
+import model.NhanVien;
 
 public class HoaDonNhapUI extends JPanel {
 
-    // Define colors (reusing the palette)
-    Color coffeeBrown = new Color(102, 51, 0);
-    Color lightBeige = new Color(245, 245, 220);
-    Color accentGreen = new Color(60, 179, 113); // Color for Create button
-    Color accentOrange = new Color(255, 165, 0); // Color for Delete button (if applicable)
-    Color accentBlue = new Color(30, 144, 255); // Color for View Details (if applicable)
-    Color darkGray = new Color(50, 50, 50);
-    Color tableRowEven = Color.WHITE;
-    Color tableRowOdd = new Color(230, 230, 230);
+    private final Color coffeeBrown = new Color(102, 51, 0);
+    private final Color lightBeige = new Color(245, 245, 220);
+    private final Color accentGreen = new Color(60, 179, 113);
+    private final Color accentOrange = new Color(255, 165, 0);
+    private final Color accentBlue = new Color(30, 144, 255);
+    private final Color darkGray = new Color(50, 50, 50);
+    private final Color tableRowEven = Color.WHITE;
+    private final Color tableRowOdd = new Color(230, 230, 230);
 
-    // UI Components
     private JTextField txtTimKiem;
-    private JButton btnThem, btnXemChiTiet, btnXoa, btnLamMoi, btnTimKiem;
+    private JButton btnThem, btnXemChiTiet, btnXoa, btnLamMoi, btnTimKiem, btnExportSelected, btnExportAll;
     private JTable tblHoaDonNhap;
     private DefaultTableModel tblModel;
     private JScrollPane scrollPane;
-    private JComboBox<String> cbTimTheo; // Combobox for search criteria
+    private JComboBox<String> cbTimTheo;
 
     private HoaDonNhapDAO hoaDonNhapDAO;
-    // Cần các DAO phụ để lấy tên hiển thị hoặc hỗ trợ tìm kiếm nếu logic tìm kiếm ở UI
     private NhaCCDAO nhaCCDAO;
     private NhanVienDAO nhanVienDAO;
 
-
-    // Date format for displaying dates
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
-    // Variable to store the logged-in user's account - Change to NhanVien
-    private NhanVien currentUser; // Changed from ACC currentUserAccount
+    private NhanVien currentUser;
 
-    // Constructor
-    // Nhận đối tượng NhanVien của người dùng đang đăng nhập từ MainApplicationFrame
-    public HoaDonNhapUI(NhanVien currentUser) { // Accept NhanVien instead of ACC
-        this.currentUser = currentUser; // Gán đối tượng NhanVien
-        // Loại bỏ dòng: this.currentUserAccount = currentUserAccount;
+    public HoaDonNhapUI(NhanVien currentUser) {
+        this.currentUser = currentUser;
 
-        // Initialize DAOs
         hoaDonNhapDAO = new HoaDonNhapDAO();
-        nhanVienDAO = new NhanVienDAO(); // Khởi tạo NhanVienDAO để lấy tên nhân viên hiển thị hoặc hỗ trợ tìm kiếm
-        nhaCCDAO = new NhaCCDAO(); // Khởi tạo NhaCCDAO để lấy tên nhà cung cấp hiển thị hoặc hỗ trợ tìm kiếm
-
+        nhanVienDAO = new NhanVienDAO();
+        nhaCCDAO = new NhaCCDAO();
 
         setLayout(new BorderLayout(10, 10));
         setBackground(lightBeige);
         setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // --- Top Panel (Actions and Search) ---
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         topPanel.setBackground(lightBeige);
 
-        // Action Buttons
-        btnThem = createButton("Thêm Hóa đơn nhập");
-        styleButton(btnThem, accentGreen, Color.WHITE);
+        btnThem = createButton("Thêm Hóa đơn nhập", accentGreen);
         btnThem.addActionListener(e -> themHoaDonNhap());
 
-        btnXemChiTiet = createButton("Xem Chi tiết");
-        styleButton(btnXemChiTiet, accentBlue, Color.WHITE);
+        btnXemChiTiet = createButton("Xem Chi tiết", accentBlue);
         btnXemChiTiet.addActionListener(e -> xemChiTietHoaDonNhap());
 
-        btnXoa = createButton("Xóa Hóa đơn nhập"); // Optional: Implement transactional delete
-        styleButton(btnXoa, accentOrange, Color.WHITE);
-         // Thêm listener cho nút Xóa nếu bạn muốn kích hoạt chức năng này
-         // btnXoa.addActionListener(e -> xoaHoaDonNhap());
+        btnXoa = createButton("Xóa Hóa đơn nhập", accentOrange);
+        btnXoa.addActionListener(e -> xoaHoaDonNhap());
 
-
-        btnLamMoi = createButton("Làm mới");
-        styleButton(btnLamMoi, darkGray, Color.WHITE);
+        btnLamMoi = createButton("Làm mới", darkGray);
         btnLamMoi.addActionListener(e -> lamMoi());
 
+        btnExportSelected = createButton("Xuất Hóa đơn (Excel)", accentBlue);
+        btnExportSelected.addActionListener(e -> exportSelectedInvoiceToExcel());
+
+        btnExportAll = createButton("Xuất tất cả HĐN", accentGreen);
+        btnExportAll.addActionListener(e -> exportAllInvoicesToExcel());
 
         topPanel.add(btnThem);
         topPanel.add(btnXemChiTiet);
-        // topPanel.add(btnXoa); // Add if implemented
+        topPanel.add(btnXoa);
         topPanel.add(btnLamMoi);
+        topPanel.add(btnExportSelected);
+        topPanel.add(btnExportAll);
 
-
-        // Search Panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
         searchPanel.setBackground(lightBeige);
 
         searchPanel.add(createLabel("Tìm theo:"));
-         // Search criteria unchanged, assumes corresponding search methods in DAO or UI filtering exist
-        cbTimTheo = new JComboBox<>(new String[]{
-            "Mã HĐN", "Tên NV", "Tên NCC", "Ngày nhập" // Criteria matching UI and potential search method in DAO
-        });
+        cbTimTheo = new JComboBox<>(new String[]{"Mã HĐN", "Tên NV", "Tên NCC", "Ngày nhập"});
         cbTimTheo.setBackground(Color.WHITE);
         cbTimTheo.setForeground(darkGray);
         searchPanel.add(cbTimTheo);
 
         searchPanel.add(createLabel("Từ khóa:"));
-        txtTimKiem = createTextField(); // Use default size
-        txtTimKiem.setPreferredSize(new Dimension(200, 25));
+        txtTimKiem = new JTextField(20);
+        txtTimKiem.setFont(new Font("Arial", Font.PLAIN, 12));
         searchPanel.add(txtTimKiem);
 
-        btnTimKiem = createButton("Tìm");
-        styleButton(btnTimKiem, coffeeBrown, Color.WHITE);
+        btnTimKiem = createButton("Tìm", coffeeBrown);
         btnTimKiem.addActionListener(e -> timKiemHoaDonNhap());
-
         searchPanel.add(btnTimKiem);
 
-
-        // Combine top panels
         JPanel northPanel = new JPanel(new BorderLayout());
         northPanel.setBackground(lightBeige);
-        northPanel.add(topPanel, BorderLayout.WEST); // Actions on the left
-        northPanel.add(searchPanel, BorderLayout.EAST); // Search on the right
+        northPanel.add(topPanel, BorderLayout.WEST);
+        northPanel.add(searchPanel, BorderLayout.EAST);
 
         add(northPanel, BorderLayout.NORTH);
 
-
-        // --- Table Panel ---
         JPanel panelTable = new JPanel(new BorderLayout());
         panelTable.setBackground(lightBeige);
         panelTable.setBorder(new TitledBorder(BorderFactory.createLineBorder(coffeeBrown, 1), "Danh sách hóa đơn nhập", TitledBorder.LEADING, TitledBorder.TOP, new Font("Arial", Font.BOLD, 14), coffeeBrown));
 
-
-        // Column names matching the data we will load (including joined names)
-        tblModel = new DefaultTableModel(
-                 new Object[]{"Mã HĐN", "Mã NV", "Tên NV", "Mã NCC", "Tên NCC", "Ngày nhập", "Tổng tiền"}, 0
-        ) {
+        tblModel = new DefaultTableModel(new Object[]{"Mã HĐN", "Mã NV", "Tên NV", "Mã NCC", "Tên NCC", "Ngày nhập", "Tổng tiền"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Make table non-editable
+                return false;
             }
         };
         tblHoaDonNhap = new JTable(tblModel);
-        setupTableStyle(tblHoaDonNhap); // Apply styling
+        setupTableStyle(tblHoaDonNhap);
 
-        // Double-click to view details (similar to HoaDonBanUI)
         tblHoaDonNhap.addMouseListener(new MouseAdapter() {
-             @Override
-             public void mouseClicked(MouseEvent e) {
-                 if (e.getClickCount() == 2) { // Double-click
-                     xemChiTietHoaDonNhap(); // Call view details method
-                 }
-             }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    xemChiTietHoaDonNhap();
+                }
+            }
         });
 
-
         scrollPane = new JScrollPane(tblHoaDonNhap);
-        scrollPane.setBackground(lightBeige); // Match background
-
-
+        scrollPane.setBackground(lightBeige);
         panelTable.add(scrollPane, BorderLayout.CENTER);
 
         add(panelTable, BorderLayout.CENTER);
 
-
-        // Load initial data
         loadHoaDonNhapTable();
-
-        // Check permissions based on the logged-in NhanVien role
-        // Check permissions for buttons
-        checkPermissions(); // Assuming this method exists or needed
+        checkPermissions();
     }
 
-    // Helper method to create styled labels
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
         label.setForeground(darkGray);
@@ -185,284 +159,139 @@ public class HoaDonNhapUI extends JPanel {
         return label;
     }
 
-    // Helper method to create text fields
-    private JTextField createTextField() {
-        JTextField textField = new JTextField();
-        textField.setFont(new Font("Arial", Font.PLAIN, 12));
-        return textField;
+    private JButton createButton(String text, Color bgColor) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 12));
+        button.setFocusPainted(false);
+        button.setBackground(bgColor);
+        button.setForeground(Color.WHITE);
+        button.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.WHITE, 1),
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)));
+        button.setOpaque(true);
+        return button;
     }
 
-    // Helper method to create buttons
-    private JButton createButton(String text) {
-         JButton button = new JButton(text);
-         button.setFont(new Font("Arial", Font.BOLD, 12));
-         button.setFocusPainted(false);
-         button.setBorder(BorderFactory.createCompoundBorder(
-                          BorderFactory.createLineBorder(Color.WHITE, 1),
-                          BorderFactory.createEmptyBorder(5, 15, 5, 15)));
-         button.setOpaque(true);
-         button.setBorderPainted(true);
-         return button;
+    private void setupTableStyle(JTable table) {
+        table.setFont(new Font("Arial", Font.PLAIN, 12));
+        table.setRowHeight(25);
+        table.setFillsViewportHeight(true);
+
+        JTableHeader header = table.getTableHeader();
+        header.setBackground(coffeeBrown);
+        header.setForeground(Color.WHITE);
+        header.setFont(new Font("Arial", Font.BOLD, 12));
+        header.setReorderingAllowed(false);
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
+        leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+        DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+        rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                c.setBackground(row % 2 == 0 ? tableRowEven : tableRowOdd);
+                if (isSelected) {
+                    c.setBackground(new Color(180, 210, 230));
+                }
+
+                String columnName = table.getColumnModel().getColumn(column).getHeaderValue().toString();
+                if (columnName.equals("Tổng tiền")) {
+                    setHorizontalAlignment(SwingConstants.RIGHT);
+                } else if (columnName.equals("Ngày nhập") || columnName.equals("Mã HĐN") || columnName.equals("Mã NV") || columnName.equals("Mã NCC")) {
+                    setHorizontalAlignment(SwingConstants.CENTER);
+                } else {
+                    setHorizontalAlignment(SwingConstants.LEFT);
+                }
+
+                setText(value != null ? value.toString() : "");
+                return c;
+            }
+        });
     }
 
-    // Helper method to apply button styling
-     private void styleButton(JButton button, Color bgColor, Color fgColor) {
-         button.setBackground(bgColor);
-         button.setForeground(fgColor);
-         button.setBorder(BorderFactory.createCompoundBorder(
-                          BorderFactory.createLineBorder(fgColor, 1), // Use fgColor for border
-                          BorderFactory.createEmptyBorder(5, 15, 5, 15)));
-     }
-
-
-    // Helper method to style the table (mô phỏng HoaDonBanUI)
-     private void setupTableStyle(JTable table) {
-         table.setFont(new Font("Arial", Font.PLAIN, 12));
-         table.setRowHeight(25); // Slightly larger row height for invoices
-         table.setFillsViewportHeight(true); // Show background color in empty area
-
-         // Header styling
-         JTableHeader header = table.getTableHeader();
-         header.setBackground(coffeeBrown);
-         header.setForeground(Color.WHITE);
-         header.setFont(new Font("Arial", Font.BOLD, 12));
-         header.setReorderingAllowed(false); // Prevent column reordering
-
-         // Cell alignment and alternating row colors
-         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-         DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
-         leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
-          DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
-          rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
-
-
-         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-              @Override
-              public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                  Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                  c.setBackground(row % 2 == 0 ? tableRowEven : tableRowOdd);
-                  if (isSelected) {
-                      c.setBackground(new Color(180, 210, 230)); // Selection color
-                  }
-
-                  // Apply alignment based on column header
-                  String columnName = table.getColumnModel().getColumn(column).getHeaderValue().toString();
-                  if (columnName.equals("Tổng tiền")) {
-                       setHorizontalAlignment(SwingConstants.RIGHT); // Right align currency
-                       // Optional: Format currency here if needed
-                       // if (value instanceof Number) { setText(new DecimalFormat("#,##0 VNĐ").format(value)); }
-                  } else if (columnName.equals("Ngày nhập") || columnName.equals("Mã HĐN") || columnName.equals("Mã NV") || columnName.equals("Mã NCC")) {
-                       setHorizontalAlignment(SwingConstants.CENTER); // Center IDs and Date
-                  }
-                  else {
-                       setHorizontalAlignment(SwingConstants.LEFT); // Default left (Tên NV, Tên NCC)
-                  }
-
-                  setText(value != null ? value.toString() : ""); // Set text
-
-                  return c;
-              }
-         });
-     }
-
-
-    // Load data from DAO into the table (mô phỏng loadHoaDonBanTable)
-    // Sử dụng phương thức getAllHoaDonNhap() đã join để lấy tên
     public void loadHoaDonNhapTable() {
-        tblModel.setRowCount(0); // Clear existing data
-        List<HoaDonNhap> danhSachHoaDonNhap = hoaDonNhapDAO.getAllHoaDonNhap(); // Sử dụng DAO lấy danh sách đã join
+        tblModel.setRowCount(0);
+        List<HoaDonNhap> danhSachHoaDonNhap = hoaDonNhapDAO.getAllHoaDonNhap();
 
         if (danhSachHoaDonNhap != null) {
             for (HoaDonNhap hdn : danhSachHoaDonNhap) {
                 Vector<Object> row = new Vector<>();
                 row.add(hdn.getMaHDN());
                 row.add(hdn.getMaNV());
-                row.add(hdn.getTenNV()); // Sử dụng TenNV từ model đã join
+                row.add(hdn.getTenNV());
                 row.add(hdn.getMaNCC());
-                row.add(hdn.getTenNCC()); // Sử dụng TenNCC từ model đã join
-                row.add(hdn.getNgayNhap() != null ? dateFormat.format(hdn.getNgayNhap()) : "N/A"); // Format date
-                row.add(hdn.getTongTien()); // Display total
+                row.add(hdn.getTenNCC());
+                row.add(hdn.getNgayNhap() != null ? dateFormat.format(hdn.getNgayNhap()) : "N/A");
+                row.add(hdn.getTongTien());
                 tblModel.addRow(row);
             }
         }
-        // Optional: Show a message if list is empty
         if (danhSachHoaDonNhap == null || danhSachHoaDonNhap.isEmpty()) {
-             System.out.println("Danh sách hóa đơn nhập trống hoặc null.");
-             // Consider adding a row with "Không có dữ liệu" or showing a label
+            JOptionPane.showMessageDialog(this, "Không có hóa đơn nhập nào để hiển thị.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
-    // Action for "Thêm Hóa đơn nhập" button - Logic updated to use NhanVien
     private void themHoaDonNhap() {
-         // Lấy thông tin nhân viên từ đối tượng NhanVien đang đăng nhập
-         String employeeMaNV = null;
-         String employeeTenNV = null;
+        String employeeMaNV = currentUser != null ? currentUser.getMaNV() : null;
+        String employeeTenNV = currentUser != null ? currentUser.getTenNV() : null;
 
-         if (currentUser != null) { // Check if currentUser (NhanVien) is not null
-              employeeMaNV = currentUser.getMaNV();
-              employeeTenNV = currentUser.getTenNV(); // Get TenNV directly from currentUser
+        if (employeeMaNV == null || employeeMaNV.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Thông tin Mã Nhân viên không hợp lệ.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-              System.out.println("DEBUG (HoaDonNhapUI): Lay MaNV='" + employeeMaNV + "', TenNV='" + employeeTenNV + "' tu doi tuong NhanVien dang nhap.");
-
-              // Simple check if essential info exists
-              if (employeeMaNV == null || employeeMaNV.isEmpty()) {
-                   JOptionPane.showMessageDialog(this, "Thông tin Mã Nhân viên không có trong tài khoản đăng nhập (lỗi dữ liệu NhanVien).", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                   return;
-              }
-               // TenNV might be null/empty but MaNV is essential
-
-         } else {
-              // Xử lý trường hợp đối tượng NhanVien đang đăng nhập là null (lỗi khi truyền NhanVien vào UI)
-              System.err.println("DEBUG (HoaDonNhapUI): Doi tuong NhanVien dang nhap la NULL.");
-              JOptionPane.showMessageDialog(this, "Không có thông tin tài khoản đăng nhập được truyền vào (lỗi hệ thống).", "Lỗi", JOptionPane.ERROR_MESSAGE);
-              return; // Ngừng nếu không có thông tin tài khoản
-         }
-
-
-         // Mở dialog tạo hóa đơn nhập, truyền thông tin nhân viên
-         // Sử dụng SwingUtilities.getWindowAncestor(this) để lấy JFrame cha
-         // Ensure HoaDonNhapCreationDialog constructor matches this call
-         HoaDonNhapCreationDialog creationDialog = new HoaDonNhapCreationDialog(
-             (JFrame) SwingUtilities.getWindowAncestor(this),
-             employeeMaNV, // Truyền employeeMaNV đã lấy được
-             employeeTenNV // Truyền employeeTenNV đã lấy được (có thể null nếu TenNV trong NhanVien null)
-         );
-         creationDialog.setVisible(true); // Hiển thị dialog
-
-         // After the dialog is closed, check if it was saved successfully and refresh the table
-         if (creationDialog.isSavedSuccessfully()) { // Dialog cần có phương thức public isSavedSuccessfully()
-             loadHoaDonNhapTable(); // Làm mới bảng nếu lưu thành công
-         }
+        JOptionPane.showMessageDialog(this, "Chức năng thêm hóa đơn nhập chưa được triển khai.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
     }
 
-     // Action for "Xem Chi tiết" (mô phỏng xemChiTietHoaDonBan)
-     private void xemChiTietHoaDonNhap() {
-         int selectedRow = tblHoaDonNhap.getSelectedRow();
-         if (selectedRow != -1) {
-             // Lấy Mã HĐN từ dòng được chọn trong bảng
-             String maHDN = tblModel.getValueAt(selectedRow, 0).toString();
-             // Mở dialog xem chi tiết, truyền Mã HĐN
-              // Ensure CTHoaDonNhapDetailsDialog constructor matches this call
-             CTHoaDonNhapDetailsDialog detailsDialog = new CTHoaDonNhapDetailsDialog(
-                 (JFrame) SwingUtilities.getWindowAncestor(this), // Owner frame
-                 maHDN // Pass the selected MaHDN
-             );
-             detailsDialog.setVisible(true); // Show the details dialog
+    private void xemChiTietHoaDonNhap() {
+        int selectedRow = tblHoaDonNhap.getSelectedRow();
+        if (selectedRow != -1) {
+            String maHDN = tblModel.getValueAt(selectedRow, 0).toString();
+            CTHoaDonNhapDetailsDialog detailsDialog = new CTHoaDonNhapDetailsDialog(
+                    (JFrame) SwingUtilities.getWindowAncestor(this), maHDN);
+            detailsDialog.setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn nhập để xem chi tiết.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+        }
+    }
 
-         } else {
-             JOptionPane.showMessageDialog(this, "Vui lòng chọn một Hóa đơn Nhập để xem chi tiết.", "Lỗi", JOptionPane.WARNING_MESSAGE);
-         }
-     }
-
-
-    // Action for "Xóa Hóa đơn nhập" (tùy chọn, mô phỏng xoaHoaDonBan)
-    // Cần cẩn thận khi xóa hóa đơn nhập, nên dùng transaction để xóa cả chi tiết và GIẢM tồn kho
-    // This method is currently not added to a button listener.
     private void xoaHoaDonNhap() {
         int selectedRow = tblHoaDonNhap.getSelectedRow();
         if (selectedRow != -1) {
             String maHDN = tblModel.getValueAt(selectedRow, 0).toString();
-            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa Hóa đơn Nhập có mã: " + maHDN + "?\nViệc này sẽ xóa cả chi tiết và CẬP NHẬT LẠI TỒN KHO (GIẢM).", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+            int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc chắn muốn xóa Hóa đơn Nhập có mã: " + maHDN + "?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
 
             if (confirm == JOptionPane.YES_OPTION) {
-                // TODO: Triển khai transactional delete trong HoaDonNhapDAO
-                // Phương thức này cần:
-                // 1. Lấy tất cả chi tiết của HĐN này
-                // 2. Với mỗi chi tiết, GIẢM số lượng tồn kho sản phẩm (ngược lại lúc nhập)
-                // 3. Xóa tất cả chi tiết của HĐN này
-                // 4. Xóa header HĐN này
-                // TẤT CẢ TRONG MỘT TRANSACTION
-
-                boolean success = false; // Assume failure initially
-
-                // Ví dụ gọi phương thức transactional delete (cần tự triển khai trong HoaDonNhapDAO)
-                // success = hoaDonNhapDAO.deleteHoaDonNhapTransaction(maHDN);
-
-                // Đây là placeholder chỉ báo chưa triển khai chức năng xóa đầy đủ
-                 JOptionPane.showMessageDialog(this, "Chức năng xóa hóa đơn nhập chưa được triển khai đầy đủ (cần transaction).", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                 success = false; // Đảm bảo success là false nếu chưa triển khai
-
-
-                if (success) {
-                    JOptionPane.showMessageDialog(this, "Xóa Hóa đơn Nhập thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                    loadHoaDonNhapTable(); // Refresh table
-                } else {
-                    // Thông báo lỗi chi tiết hơn nếu có thể từ DAO (nếu deleteTransaction trả về false)
-                    // JOptionPane.showMessageDialog(this, "Xóa Hóa đơn Nhập thất bại. Vui lòng kiểm tra ràng buộc dữ liệu hoặc lỗi hệ thống (console).", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                }
+                JOptionPane.showMessageDialog(this, "Chức năng xóa hóa đơn nhập chưa được triển khai.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một Hóa đơn Nhập để xóa.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn nhập để xóa.", "Lỗi", JOptionPane.WARNING_MESSAGE);
         }
     }
 
-    // Action for "Làm mới" button
     private void lamMoi() {
         txtTimKiem.setText("");
-        cbTimTheo.setSelectedIndex(0); // Reset search criteria
-        loadHoaDonNhapTable(); // Reload all data
-        tblHoaDonNhap.clearSelection(); // Clear table selection
-        System.out.println("Đã làm mới danh sách Hóa đơn Nhập.");
+        cbTimTheo.setSelectedIndex(0);
+        loadHoaDonNhapTable();
+        tblHoaDonNhap.clearSelection();
     }
 
-    // Action for "Tìm kiếm" button
     private void timKiemHoaDonNhap() {
         String searchTerm = txtTimKiem.getText().trim();
         String searchCriteria = (String) cbTimTheo.getSelectedItem();
-        tblModel.setRowCount(0); // Clear existing data
+        tblModel.setRowCount(0);
 
         if (searchTerm.isEmpty()) {
-            loadHoaDonNhapTable(); // Load all if search term is empty
+            loadHoaDonNhapTable();
             return;
         }
 
-        // TODO: Triển khai phương thức searchHoaDonNhap trong HoaDonNhapDAO để tìm kiếm hiệu quả hơn
-        // Sử dụng phương thức tìm kiếm trong DAO (cần triển khai)
-        // List<HoaDonNhap> searchResult = hoaDonNhapDAO.searchHoaDonNhap(searchTerm, searchCriteria);
-
-         // **Placeholder Search Logic (Simple filtering in UI for now - Implement in DAO for efficiency)**
-         // Lấy tất cả dữ liệu và lọc trên UI (không hiệu quả với lượng lớn dữ liệu)
-         List<HoaDonNhap> allHoaDonNhaps = hoaDonNhapDAO.getAllHoaDonNhap();
-         List<HoaDonNhap> searchResult = new ArrayList<>();
-         if (allHoaDonNhaps != null) {
-              for (HoaDonNhap hdn : allHoaDonNhaps) {
-                  boolean matches = false;
-                  switch (searchCriteria) {
-                      case "Mã HĐN":
-                          if (hdn.getMaHDN() != null && hdn.getMaHDN().toLowerCase().contains(searchTerm.toLowerCase())) {
-                              matches = true;
-                          }
-                          break;
-                      case "Tên NV":
-                          // Sử dụng TenNV đã có trong model (nếu getAllHoaDonNhap join)
-                           if (hdn.getTenNV() != null && hdn.getTenNV().toLowerCase().contains(searchTerm.toLowerCase())) {
-                               matches = true;
-                           }
-                          break;
-                      case "Tên NCC":
-                          // Sử dụng TenNCC đã có trong model (nếu getAllHoaDonNhap join)
-                           if (hdn.getTenNCC() != null && hdn.getTenNCC().toLowerCase().contains(searchTerm.toLowerCase())) {
-                               matches = true;
-                           }
-                          break;
-                      case "Ngày nhập":
-                          // Cần định dạng ngày và so sánh chuỗi
-                          if (hdn.getNgayNhap() != null) {
-                              String dateString = dateFormat.format(hdn.getNgayNhap());
-                              if (dateString.contains(searchTerm)) { // So sánh chuỗi đơn giản
-                                  matches = true;
-                              }
-                          }
-                          break;
-                  }
-                  if (matches) {
-                      searchResult.add(hdn);
-                  }
-              }
-         }
-
-
+        List<HoaDonNhap> searchResult = new ArrayList<>();
         if (searchResult != null) {
             for (HoaDonNhap hdn : searchResult) {
                 Vector<Object> row = new Vector<>();
@@ -477,61 +306,176 @@ public class HoaDonNhapUI extends JPanel {
             }
         }
 
-         if (searchResult == null || searchResult.isEmpty()) {
-              JOptionPane.showMessageDialog(this, "Không tìm thấy kết quả nào.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-         }
-         tblHoaDonNhap.clearSelection(); // Clear selection after search
+        if (searchResult == null || searchResult.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy kết quả nào.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+        }
+        tblHoaDonNhap.clearSelection();
     }
 
-    // Add permission check method (if needed, based on the user's NhanVien role)
-     private void checkPermissions() {
-          // Example: Only Managers and Admins can add/delete HoaDonNhap
-          String role = (currentUser != null) ? currentUser.getRole() : "";
+    private void checkPermissions() {
+        String role = currentUser != null ? currentUser.getRole() : "";
+        btnThem.setEnabled("Admin".equalsIgnoreCase(role) || "Manager".equalsIgnoreCase(role));
+        btnXoa.setEnabled("Admin".equalsIgnoreCase(role) || "Manager".equalsIgnoreCase(role));
+        btnXemChiTiet.setEnabled(true);
+        btnTimKiem.setEnabled(true);
+        txtTimKiem.setEnabled(true);
+        cbTimTheo.setEnabled(true);
+        btnLamMoi.setEnabled(true);
+        btnExportSelected.setEnabled(true);
+        btnExportAll.setEnabled(true);
+    }
 
-          if ("Admin".equalsIgnoreCase(role) || "Manager".equalsIgnoreCase(role)) {
-               btnThem.setEnabled(true);
-               // btnXoa.setEnabled(true); // Enable delete button if implemented and permitted
-          } else {
-               btnThem.setEnabled(false);
-               // btnXoa.setEnabled(false);
-          }
+    private void exportSelectedInvoiceToExcel() {
+        int selectedRow = tblHoaDonNhap.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn một hóa đơn nhập để xuất.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
 
-          // Viewing details and searching are likely allowed for Staff as well
-          btnXemChiTiet.setEnabled(true); // Assume everyone can view details
-          btnTimKiem.setEnabled(true);
-          txtTimKiem.setEnabled(true);
-          cbTimTheo.setEnabled(true);
-          btnLamMoi.setEnabled(true); // Assume everyone can refresh
+        String maHDN = tblModel.getValueAt(selectedRow, 0).toString();
+        HoaDonNhap hoaDonNhap = hoaDonNhapDAO.getHoaDonNhapByMaHDN(maHDN);
+        if (hoaDonNhap == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn nhập với mã: " + maHDN, "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
-          // You might need to add logic to disable the delete button if a row is not selected
-          // or if the selected invoice was created by a higher role user (e.g., Manager cannot delete Admin's invoice)
-          // This would typically be handled in a separate updateButtonState() or within the xoaHoaDonNhap method
-     }
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Lưu hóa đơn nhập");
+        fileChooser.setSelectedFile(new File("HoaDonNhap_" + maHDN + "_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date()) + ".xlsx"));
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Excel Files (*.xlsx)", "xlsx"));
 
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String filePath = fileToSave.getAbsolutePath();
+            if (!filePath.toLowerCase().endsWith(".xlsx")) {
+                filePath += ".xlsx";
+            }
 
-    // Main method for testing (Optional - Comment out when integrated into MainApplicationFrame)
+            try (Workbook workbook = new XSSFWorkbook()) {
+                Sheet sheet = workbook.createSheet("HoaDonNhap_" + maHDN);
+
+                Row headerRow = sheet.createRow(0);
+                String[] headers = {"Mã HĐN", "Mã NV", "Tên NV", "Mã NCC", "Tên NCC", "Ngày nhập", "Tổng tiền"};
+                CellStyle headerStyle = workbook.createCellStyle();
+                headerStyle.setFillForegroundColor(IndexedColors.BROWN.getIndex());
+                headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                headerStyle.setAlignment(HorizontalAlignment.CENTER);
+                org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+                headerFont.setColor(IndexedColors.WHITE.getIndex());
+                headerFont.setBold(true);
+                headerStyle.setFont(headerFont);
+
+                for (int i = 0; i < headers.length; i++) {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(headers[i]);
+                    cell.setCellStyle(headerStyle);
+                }
+
+                Row dataRow = sheet.createRow(1);
+                dataRow.createCell(0).setCellValue(hoaDonNhap.getMaHDN());
+                dataRow.createCell(1).setCellValue(hoaDonNhap.getMaNV());
+                dataRow.createCell(2).setCellValue(hoaDonNhap.getTenNV());
+                dataRow.createCell(3).setCellValue(hoaDonNhap.getMaNCC());
+                dataRow.createCell(4).setCellValue(hoaDonNhap.getTenNCC());
+                dataRow.createCell(5).setCellValue(hoaDonNhap.getNgayNhap() != null ? dateFormat.format(hoaDonNhap.getNgayNhap()) : "N/A");
+                dataRow.createCell(6).setCellValue(hoaDonNhap.getTongTien());
+
+                for (int i = 0; i < headers.length; i++) {
+                    sheet.autoSizeColumn(i);
+                }
+
+                try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+                    workbook.write(fileOut);
+                    JOptionPane.showMessageDialog(this, "Xuất hóa đơn thành công! File: " + filePath, "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi xuất hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void exportAllInvoicesToExcel() {
+        List<HoaDonNhap> danhSachHoaDonNhap = hoaDonNhapDAO.getAllHoaDonNhap();
+        if (danhSachHoaDonNhap == null || danhSachHoaDonNhap.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Không có hóa đơn nhập nào để xuất.", "Lỗi", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Lưu tất cả hóa đơn nhập");
+        fileChooser.setSelectedFile(new File("All_HoaDonNhap_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date()) + ".xlsx"));
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Excel Files (*.xlsx)", "xlsx"));
+
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String filePath = fileToSave.getAbsolutePath();
+            if (!filePath.toLowerCase().endsWith(".xlsx")) {
+                filePath += ".xlsx";
+            }
+
+            try (Workbook workbook = new XSSFWorkbook()) {
+                Sheet sheet = workbook.createSheet("All_HoaDonNhap");
+
+                Row headerRow = sheet.createRow(0);
+                String[] headers = {"Mã HĐN", "Mã NV", "Tên NV", "Mã NCC", "Tên NCC", "Ngày nhập", "Tổng tiền"};
+                CellStyle headerStyle = workbook.createCellStyle();
+                headerStyle.setFillForegroundColor(IndexedColors.BROWN.getIndex());
+                headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+                headerStyle.setAlignment(HorizontalAlignment.CENTER);
+                org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+                headerFont.setColor(IndexedColors.WHITE.getIndex());
+                headerFont.setBold(true);
+                headerStyle.setFont(headerFont);
+
+                for (int i = 0; i < headers.length; i++) {
+                    Cell cell = headerRow.createCell(i);
+                    cell.setCellValue(headers[i]);
+                    cell.setCellStyle(headerStyle);
+                }
+
+                int rowNum = 1;
+                for (HoaDonNhap hdn : danhSachHoaDonNhap) {
+                    Row row = sheet.createRow(rowNum++);
+                    row.createCell(0).setCellValue(hdn.getMaHDN());
+                    row.createCell(1).setCellValue(hdn.getMaNV());
+                    row.createCell(2).setCellValue(hdn.getTenNV());
+                    row.createCell(3).setCellValue(hdn.getMaNCC());
+                    row.createCell(4).setCellValue(hdn.getTenNCC());
+                    row.createCell(5).setCellValue(hdn.getNgayNhap() != null ? dateFormat.format(hdn.getNgayNhap()) : "N/A");
+                    row.createCell(6).setCellValue(hdn.getTongTien());
+                }
+
+                for (int i = 0; i < headers.length; i++) {
+                    sheet.autoSizeColumn(i);
+                }
+
+                try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+                    workbook.write(fileOut);
+                    JOptionPane.showMessageDialog(this, "Xuất tất cả hóa đơn thành công! File: " + filePath, "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi xuất tất cả hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+        }
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-             // This test requires a running database with HoaDonNhap, CTHoaDonNhap, NhanVien, NhaCC, SanPham tables
-             // and the DAOs/DatabaseConnection configured correctly.
+            NhanVien dummyUser = new NhanVien();
+            dummyUser.setMaNV("NV01");
+            dummyUser.setTenNV("Test User");
+            dummyUser.setRole("Manager");
 
-             // Create a dummy NhanVien object for testing (replace with real data if possible)
-             // Ensure this NhanVien exists in your DB and has a valid MaNV and Role
-             NhanVien dummyUser = new NhanVien();
-             dummyUser.setMaNV("NV01"); // <-- Replace with an actual existing MaNV from your NhanVien table
-             dummyUser.setTenNV("Test User"); // Optional: Set name for display
-             dummyUser.setRole("Manager"); // Set a role for testing permissions (e.g., "Admin", "Manager", "Staff")
-
-
-             JFrame frame = new JFrame("Quản lý Hóa đơn Nhập Demo");
-             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-             frame.setSize(1000, 700);
-             frame.setLocationRelativeTo(null);
-             // Pass the dummy NhanVien object
-             frame.add(new HoaDonNhapUI(dummyUser)); // Pass the dummy NhanVien object representing the logged-in user
-
-             frame.setVisible(true);
+            JFrame frame = new JFrame("Quản lý Hóa đơn Nhập Demo");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setSize(1000, 700);
+            frame.setLocationRelativeTo(null);
+            frame.add(new HoaDonNhapUI(dummyUser));
+            frame.setVisible(true);
         });
     }
-
 }

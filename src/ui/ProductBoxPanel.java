@@ -1,32 +1,45 @@
 package ui;
 
-import java.awt.*; // Import model SanPham
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.net.URL; // Import MouseAdapter for click handling
-import javax.imageio.ImageIO; // Import MouseEvent
-import javax.swing.*; // Potentially useful for loading images from URL if needed
-import javax.swing.border.EmptyBorder; // For loading images from file path
-import model.SanPham; // For reading images
+import java.net.URL;
+import java.text.DecimalFormat;
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import model.SanPham;
+
+// Định nghĩa màu sắc theo giao diện gốc của bạn
+// Tốt nhất nên có một class AppColors chung để quản lý màu sắc cho toàn bộ ứng dụng
+class OriginalColors {
+    public static final Color coffeeBrown = new Color(102, 51, 0); // Màu nâu cà phê
+    public static final Color lightBeige = new Color(245, 245, 220); // Màu be nhạt (cho nền)
+    public static final Color darkGray = new Color(50, 50, 50); // Màu xám đậm (cho văn bản, viền)
+    public static final Color accentGreen = new Color(60, 179, 113); // Màu xanh lá (ví dụ: Doanh thu, nút Thêm/Tạo mới)
+    public static final Color accentOrange = new Color(255, 165, 0); // Màu cam (ví dụ: Hết hàng, nút Xóa)
+    public static final Color accentBlue = new Color(30, 144, 255); // Màu xanh dương (ví dụ: Hóa đơn bán, nút Lọc)
+    public static final Color linkColor = new Color(0, 102, 204); // Màu xanh cho liên kết (ví dụ: ở LoginDialog)
+}
 
 
 public class ProductBoxPanel extends JPanel {
 
-    // Define colors (reusing the palette)
-    Color coffeeBrown = new Color(102, 51, 0); // Màu nâu cà phê
-    Color lightBeige = new Color(245, 245, 220); // Màu be nhạt (cho nền)
-    Color darkGray = new Color(50, 50, 50); // Màu xám đậm (cho văn bản, viền)
-    Color accentGreen = new Color(60, 179, 113); // Màu xanh lá (cho nút Thêm/Tạo mới)
-    Color accentOrange = new Color(255, 165, 0); // Màu cam (cho nút Xóa)
-    Color accentBlue = new Color(30, 144, 255); // Màu xanh dương (cho nút Chi tiết/Lọc)
-    Color linkColor = new Color(0, 102, 204); // Màu xanh cho liên kết (ví dụ: ở LoginDialog)
+    // Sử dụng màu sắc gốc
+    private final Color coffeeBrown = OriginalColors.coffeeBrown;
+    private final Color lightBeige = OriginalColors.lightBeige;
+    private final Color darkGray = OriginalColors.darkGray;
+    private final Color accentGreen = OriginalColors.accentGreen;
+    private final Color accentOrange = OriginalColors.accentOrange;
+    private final Color accentBlue = OriginalColors.accentBlue;
+
 
     // UI Components
     private JLabel lblProductImage;
     private JLabel lblProductName;
     private JLabel lblProductPrice;
-    // TODO: Add other labels or buttons if needed (e.g., add to cart)
+    private JLabel lblProductStock;
 
     private SanPham product; // The SanPham object this box represents
 
@@ -35,24 +48,24 @@ public class ProductBoxPanel extends JPanel {
         this.product = product;
 
         // Set layout for the product box
-        // Use BoxLayout for vertical arrangement of components within the box
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); // Arrange components vertically
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE); // White background for the box
-        // Add border and padding
+        // Add border and padding using original darkGray
         setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(darkGray, 1), // Outer border
-                    new EmptyBorder(10, 10, 10, 10))); // Inner padding
-        setAlignmentX(Component.LEFT_ALIGNMENT); // Align boxes to the left in the container (used by parent layout like FlowLayout/BoxLayout)
-        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); // Change cursor on hover
+                    BorderFactory.createLineBorder(darkGray, 1),
+                    new EmptyBorder(10, 10, 10, 10)));
+        setAlignmentX(Component.LEFT_ALIGNMENT);
+        setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
 
         // --- Product Image ---
         lblProductImage = new JLabel();
-        lblProductImage.setAlignmentX(Component.CENTER_ALIGNMENT); // Center align the image horizontally
-        lblProductImage.setPreferredSize(new Dimension(100, 100)); // Set preferred size for image area (fixed size)
+        lblProductImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblProductImage.setPreferredSize(new Dimension(100, 100));
         lblProductImage.setMinimumSize(new Dimension(100, 100));
         lblProductImage.setMaximumSize(new Dimension(100, 100));
-        lblProductImage.setBorder(BorderFactory.createLineBorder(lightBeige)); // Optional: border for image area
+        // Optional: border for image area - using original lightBeige
+        lblProductImage.setBorder(BorderFactory.createLineBorder(lightBeige));
         loadProductImage(product.getAnh()); // Load and set the image based on path
         add(lblProductImage);
 
@@ -63,43 +76,46 @@ public class ProductBoxPanel extends JPanel {
         // --- Product Name ---
         lblProductName = new JLabel("<html><b>" + product.getTenSP() + "</b></html>"); // Bold name
         lblProductName.setFont(new Font("Arial", Font.PLAIN, 14));
-        lblProductName.setForeground(coffeeBrown); // Coffee color for name
-        lblProductName.setAlignmentX(Component.CENTER_ALIGNMENT); // Center align text
-        // Optional: Limit size to prevent stretching horizontally too much
+        lblProductName.setForeground(coffeeBrown); // Use original coffeeBrown for name
+        lblProductName.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblProductName.setMaximumSize(new Dimension(Integer.MAX_VALUE, lblProductName.getPreferredSize().height));
         add(lblProductName);
 
-         // Add some vertical space
         add(Box.createRigidArea(new Dimension(0, 3)));
 
 
         // --- Product Price ---
-        lblProductPrice = new JLabel(String.format("%,d VNĐ", product.getGiaban())); // Format price
+        DecimalFormat currencyFormatter = new DecimalFormat("#,### VNĐ");
+        lblProductPrice = new JLabel(currencyFormatter.format(product.getGiaban()), SwingConstants.CENTER);
         lblProductPrice.setFont(new Font("Arial", Font.BOLD, 12));
-        lblProductPrice.setForeground(accentGreen); // Green color for price
-        lblProductPrice.setAlignmentX(Component.CENTER_ALIGNMENT); // Center align text
-         lblProductPrice.setMaximumSize(new Dimension(Integer.MAX_VALUE, lblProductPrice.getPreferredSize().height));
+        lblProductPrice.setForeground(accentGreen); // Use original accentGreen for price
+        lblProductPrice.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblProductPrice.setMaximumSize(new Dimension(Integer.MAX_VALUE, lblProductPrice.getPreferredSize().height));
         add(lblProductPrice);
 
+ 
+        // Add some vertical space
+        add(Box.createRigidArea(new Dimension(0, 3)));
 
-         // TODO: Add more details or buttons here if needed
-         // Example: Add "Xem chi tiết" button
-         /*
-         JButton btnViewDetails = new JButton("Xem chi tiết");
-         btnViewDetails.setAlignmentX(Component.CENTER_ALIGNMENT);
-         // Add action listener to open a details dialog
-         // btnViewDetails.addActionListener(e -> { ... open details dialog ... });
-         add(Box.createRigidArea(new Dimension(0, 5)));
-         add(btnViewDetails);
-         */
-
-        // Add a component that takes up remaining vertical space, pushing other components to the top
+        // --- Product Stock (Số lượng) ---
+        // Label hiển thị số lượng tồn kho - ĐÃ CÓ SẴN TRONG CODE GỐC CỦA BẠN
+        lblProductStock = new JLabel("Còn lại: " + product.getSoluong(), SwingConstants.CENTER);
+        lblProductStock.setFont(new Font("Arial", Font.PLAIN, 12)); // Font size from your original code
+        // Highlight low stock using original accentOrange
+        lblProductStock.setForeground(product.getSoluong() <= 10 ? accentOrange : darkGray); // Color from your original code
+        lblProductStock.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblProductStock.setMaximumSize(new Dimension(Integer.MAX_VALUE, lblProductStock.getPreferredSize().height));
+        add(lblProductStock); // Add the stock label to the panel
         add(Box.createVerticalGlue());
 
+        // // Optional: Add "Xem chi tiết" button below glue if desired
 
-        // Set the size of the box (optional, BoxLayout handles sizing but this can set a minimum)
-        // setPreferredSize(new Dimension(150, 200)); // Example initial size
-        // setMaximumSize(new Dimension(150, 250)); // Prevent stretching too much
+        // JButton btnViewDetails = new JButton("Xem chi tiết");
+        // btnViewDetails.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // // Style the button using original colors if needed
+        // styleButton(btnViewDetails, OriginalColors.accentBlue, Color.WHITE);
+        // add(Box.createRigidArea(new Dimension(0, 5)));
+        // add(btnViewDetails);
 
 
         // Add a mouse listener for interaction (clicking opens details)
@@ -107,26 +123,67 @@ public class ProductBoxPanel extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 System.out.println("Clicked on product: " + product.getTenSP());
-                // Get the parent Frame to make the dialog modal to it
-                Frame owner = JOptionPane.getFrameForComponent(ProductBoxPanel.this); // Use ProductBoxPanel.this to get the panel's context
-
+                Frame owner = JOptionPane.getFrameForComponent(ProductBoxPanel.this);
                 if (owner instanceof JFrame) {
-                     // Create and show the product details dialog
-                     ProductDetailsDialog detailsDialog = new ProductDetailsDialog((JFrame) owner, product); // Pass the product object
+
+                     ProductDetailsDialog detailsDialog = new ProductDetailsDialog((JFrame) owner, product);
                      detailsDialog.setVisible(true);
+                    // JOptionPane.showMessageDialog(owner, "Xem chi tiết sản phẩm: " + product.getTenSP(), "Chi tiết", JOptionPane.INFORMATION_MESSAGE);
+
                 } else {
                      System.err.println("Could not get the main JFrame for showing the details dialog from ProductBoxPanel.");
-                     // Optional: Show an error message
-                     // JOptionPane.showMessageDialog(ProductBoxPanel.this, "Không thể mở chi tiết sản phẩm.", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(ProductBoxPanel.this, "Không thể mở chi tiết sản phẩm.", "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             }
-             // Optional: Add mouseEntered/mouseExited for hover effects (cursor change is already done in constructor)
-             // @Override
-             // public void mouseEntered(MouseEvent e) { ... }
-             // @Override
-             // public void mouseExited(MouseEvent e) { ... }
+            
+             @Override
+             public void mouseEntered(MouseEvent e) {
+                  setBorder(BorderFactory.createLineBorder(coffeeBrown, 2)); // Highlight with original primary color
+             }
+
+             
+             @Override
+             public void mouseExited(MouseEvent e) {
+                  setBorder(BorderFactory.createLineBorder(darkGray, 1)); // Revert to original border
+             }
         });
     }
+    
+    
+    private void styleButton(JButton button, Color bgColor, Color fgColor) {
+        // Áp dụng màu nền cho nút
+        button.setBackground(bgColor);
+        // Áp dụng màu chữ cho nút
+        button.setForeground(fgColor);
+        // Loại bỏ viền khi nút được focus (nhấn tab)
+        button.setFocusPainted(false);
+        // Tạo viền kết hợp: viền đường kẻ ngoài và padding bên trong
+        button.setBorder(BorderFactory.createCompoundBorder(
+                // Viền đường kẻ, màu hơi đậm hơn màu nền, độ dày 1 pixel
+                BorderFactory.createLineBorder(bgColor.darker(), 1),
+                // Padding (trên, trái, dưới, phải) bên trong viền
+                BorderFactory.createEmptyBorder(5, 15, 5, 15)));
+        // Đảm bảo màu nền được hiển thị
+        button.setOpaque(true);
+        // Đảm bảo viền được vẽ
+        button.setBorderPainted(true);
+        // Đặt font chữ cho nút
+        button.setFont(new Font("Arial", Font.BOLD, 12));
+
+        // Thêm hiệu ứng hover (tùy chọn, làm nút hơi sáng hoặc tối đi khi rê chuột)
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(bgColor.darker()); // Màu nền tối hơn khi rê chuột
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(bgColor); // Trở lại màu nền gốc khi không rê chuột
+            }
+        });
+    }
+
 
     // Helper method to load and scale the product image
     private void loadProductImage(String imagePath) {
@@ -134,10 +191,9 @@ public class ProductBoxPanel extends JPanel {
         lblProductImage.setIcon(null);
         lblProductImage.setText("");
 
-        // Handle null or empty image path explicitly
         if (imagePath == null || imagePath.trim().isEmpty()) {
-            displayNoImage(); // Show the "no image" state
-            return; // Exit the method
+            displayNoImage();
+            return;
         }
 
         Image image = null;
@@ -147,48 +203,41 @@ public class ProductBoxPanel extends JPanel {
             File imageFile = new File(imagePath);
             if (imageFile.exists()) {
                 System.out.println("Loading image from file: " + imagePath);
-                image = ImageIO.read(imageFile); // Use ImageIO to read the image file
+                image = ImageIO.read(imageFile);
             }
 
             // 2. If file not found or failed to read, try loading from resources
             if (image == null) {
                 System.out.println("File not found or failed to read. Trying resource: " + imagePath);
-                 URL imageUrl = getClass().getResource(imagePath); // Get URL from resource
+                 URL imageUrl = getClass().getResource(imagePath);
                  if (imageUrl != null) {
                      System.out.println("Resource URL found: " + imageUrl);
-                      image = ImageIO.read(imageUrl); // Use ImageIO to read from URL
+                      image = ImageIO.read(imageUrl);
                  } else {
                      System.err.println("Resource image not found: " + imagePath);
-                     displayImageNotFound(); // Show "not found" state
-                     return; // Exit if resource not found
+                     displayImageNotFound();
+                     return;
                  }
             }
 
-            // 3. If an image was successfully loaded (either from file or resource)
             if (image != null) {
-                 // Scale the image (using the size set in the constructor)
-                 Image scaledImage = image.getScaledInstance(100, 100, Image.SCALE_SMOOTH); // Scale image
-                 lblProductImage.setIcon(new ImageIcon(scaledImage)); // Set the scaled icon
-                 // Size of JLabel is now controlled by preferredSize and layout
-                 // lblProductImage.setPreferredSize(new Dimension(100, 100)); // Keep the fixed size
+                 Image scaledImage = image.getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+                 lblProductImage.setIcon(new ImageIcon(scaledImage));
                  System.out.println("Image loaded and scaled successfully.");
             } else {
-                 // If ImageIO.read returned null (invalid format, etc.)
                  System.err.println("ImageIO.read returned null for path: " + imagePath);
-                 displayErrorLoadingImage("Định dạng ảnh lỗi"); // Show error state
+                 displayErrorLoadingImage("Định dạng ảnh lỗi");
             }
 
         } catch (Exception e) {
-            // Catch any other exceptions during loading/scaling (IOExceptions, etc.)
             System.err.println("Exception loading or scaling image from path: " + imagePath + " - " + e.getMessage());
             e.printStackTrace();
-            displayErrorLoadingImage("Lỗi tải ảnh"); // Show generic error state
+            displayErrorLoadingImage("Lỗi tải ảnh");
         }
     }
 
     // Helper methods for displaying different states
     private void displayNoImage() {
-        // Load a default "no image" icon from resources
          URL noImageUrl = getClass().getResource("/images/no_image.png"); // Assuming /images/no_image.png exists
          if (noImageUrl != null) {
              try {
@@ -201,39 +250,33 @@ public class ProductBoxPanel extends JPanel {
                   fallbackToText("Không có ảnh (Lỗi tải default)");
              }
          } else {
-             // Fallback to text if default image is also missing
              System.err.println("Default no_image.png resource not found.");
               fallbackToText("Không có ảnh");
          }
         lblProductImage.setHorizontalAlignment(SwingConstants.CENTER);
         lblProductImage.setVerticalAlignment(SwingConstants.CENTER);
-         // Size already set in constructor via preferredSize
     }
 
     private void displayImageNotFound() {
-        lblProductImage.setIcon(null); // Clear icon
-        lblProductImage.setText("Không tìm thấy ảnh"); // Set text message
-        // Center the text
+        lblProductImage.setIcon(null);
+        lblProductImage.setText("Không tìm thấy ảnh");
         lblProductImage.setHorizontalTextPosition(SwingConstants.CENTER);
         lblProductImage.setVerticalTextPosition(SwingConstants.CENTER);
         lblProductImage.setHorizontalAlignment(SwingConstants.CENTER);
         lblProductImage.setVerticalAlignment(SwingConstants.CENTER);
-        lblProductImage.setForeground(darkGray); // Text color
-        lblProductImage.setFont(new Font("Arial", Font.PLAIN, 10)); // Font size
-         // Size already set
+        lblProductImage.setForeground(darkGray); // Use original darkGray for text
+        lblProductImage.setFont(new Font("Arial", Font.PLAIN, 10));
     }
 
     private void displayErrorLoadingImage(String message) {
-        lblProductImage.setIcon(null); // Clear icon
-        lblProductImage.setText(message); // Set text message (e.g., "Lỗi tải ảnh")
-         // Center the text
+        lblProductImage.setIcon(null);
+        lblProductImage.setText(message);
         lblProductImage.setHorizontalTextPosition(SwingConstants.CENTER);
         lblProductImage.setVerticalTextPosition(SwingConstants.CENTER);
         lblProductImage.setHorizontalAlignment(SwingConstants.CENTER);
         lblProductImage.setVerticalAlignment(SwingConstants.CENTER);
-        lblProductImage.setForeground(Color.RED); // Text color
-        lblProductImage.setFont(new Font("Arial", Font.PLAIN, 10)); // Font size
-        // Size already set
+        lblProductImage.setForeground(Color.RED); // Error in red
+        lblProductImage.setFont(new Font("Arial", Font.PLAIN, 10));
     }
 
     private void fallbackToText(String message) {
@@ -243,57 +286,44 @@ public class ProductBoxPanel extends JPanel {
         lblProductImage.setVerticalTextPosition(SwingConstants.CENTER);
         lblProductImage.setHorizontalAlignment(SwingConstants.CENTER);
         lblProductImage.setVerticalAlignment(SwingConstants.CENTER);
-        lblProductImage.setForeground(darkGray);
+        lblProductImage.setForeground(darkGray); // Use original darkGray for text
         lblProductImage.setFont(new Font("Arial", Font.PLAIN, 10));
     }
-
-
-    // Helper method to create styled labels (defined earlier in other UI classes)
-    // private JLabel createLabel(String text) { ... }
-
-     // Helper method to create value labels (defined earlier in other UI classes)
-     // private JLabel createValueLabel(String text) { ... }
-
-     // Helper method to style buttons (defined earlier in other UI classes)
-    // private void styleButton(JButton button, Color bgColor, Color fgColor) { ... }
 
 
     // --- Main method for testing (Optional) ---
     /*
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            SanPham sampleProduct1 = new SanPham("SP001", "Cà phê Đen", "CF", 10000, 15000, 50, "C:/path/to/your/real/image.jpg"); // Example file path
-            SanPham sampleProduct2 = new SanPham("SP002", "Trà Sữa Matcha", "TS", 12000, 20000, 30, "/images/matcha.png"); // Example resource path
-            SanPham sampleProduct3 = new SanPham("SP003", "Sản phẩm không ảnh", "Other", 8000, 12000, 100, null);
-             SanPham sampleProduct4 = new SanPham("SP004", "Ảnh lỗi resource", "Error", 5000, 10000, 10, "/images/non_existent.png"); // Non-existent resource
-             SanPham sampleProduct5 = new SanPham("SP005", "Ảnh lỗi file", "Error", 6000, 11000, 20, "C:/non/existent/file.jpg"); // Non-existent file
+            // Ensure you have mock SanPham objects with realistic data for testing
+            // Example: Assuming a class SanPham with constructor SanPham(String maSP, String tenSP, String maLoai, double giamua, double giaban, int soluong, String anh)
+            SanPham sampleProduct1 = new SanPham("SP001", "Cà phê Sữa Đá", "CF", 10000, 25000, 50, "/images/sample_coffee1.png"); // Assuming image exists in resources
+            SanPham sampleProduct2 = new SanPham("SP002", "Trà Đào Cam Sả", "TS", 15000, 30000, 8, "/images/sample_tea1.png"); // Low stock, assuming image exists
+            SanPham sampleProduct3 = new SanPham("SP003", "Bánh Muffin Chocolate", "BM", 20000, 35000, 0, null); // Out of stock, no image
+            SanPham sampleProduct4 = new SanPham("SP004", "Nước Ép Cam", "NEP", 18000, 28000, 25, "/images/non_existent_image.png"); // Non-existent image resource
 
 
             JFrame frame = new JFrame("Product Box Demo");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setSize(800, 600); // Increased size for multiple boxes
+            frame.setSize(800, 600);
             frame.setLocationRelativeTo(null);
 
-            // Use a JPanel with a layout manager to hold multiple ProductBoxPanels
-            JPanel containerPanel = new JPanel(); // Use default FlowLayout or set a grid/flow layout
-             containerPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 15)); // FlowLayout with spacing
-            containerPanel.setBackground(new Color(245, 245, 220)); // Match lightBeige
+            JPanel containerPanel = new JPanel();
+            containerPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 15));
+            containerPanel.setBackground(OriginalColors.lightBeige); // Use color from OriginalColors
 
             containerPanel.add(new ProductBoxPanel(sampleProduct1));
             containerPanel.add(new ProductBoxPanel(sampleProduct2));
             containerPanel.add(new ProductBoxPanel(sampleProduct3));
-            containerPanel.add(new ProductBoxPanel(sampleProduct4)); // Test non-existent resource
-            containerPanel.add(new ProductBoxPanel(sampleProduct5)); // Test non-existent file
+            containerPanel.add(new ProductBoxPanel(sampleProduct4));
+
+            JScrollPane scrollPane = new JScrollPane(containerPanel);
+            scrollPane.setBorder(BorderFactory.createEmptyBorder());
+            scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
 
-             // Add the container panel to a scroll pane if you have many boxes
-             JScrollPane scrollPane = new JScrollPane(containerPanel);
-             scrollPane.setBorder(BorderFactory.createEmptyBorder()); // No border for the scroll pane
-             scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED); // Show vertical scrollbar
-             scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); // Hide horizontal scrollbar
-
-
-            frame.add(scrollPane); // Add the scroll pane to the frame
+            frame.add(scrollPane);
 
             frame.setVisible(true);
         });

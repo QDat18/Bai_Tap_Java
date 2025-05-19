@@ -7,13 +7,13 @@ public class NhanVien {
     private String Gioitinh;
     private String SDT;
     private String tendangnhap;
-    private String matkhau; // Should store hashed password
+    private String matkhau;
     private String email;
     private String role;
 
-    public NhanVien(){
-
+    public NhanVien() {
     }
+
     public NhanVien(String maNV, String tenNV, String soDienThoai, String diaChi,
                     String tendangnhap, String matkhau, String email, String role) {
         this.MaNV = maNV;
@@ -27,7 +27,7 @@ public class NhanVien {
     }
 
     public String getMaNV() {
-         return MaNV; 
+        return MaNV; 
     }
     
     public void setMaNV(String maNV) {
@@ -65,6 +65,7 @@ public class NhanVien {
     public void setSDT(String sdt) {
         SDT = sdt; 
     }
+
     public String getTendangnhap() { return tendangnhap; }
     public void setTendangnhap(String tendangnhap) { this.tendangnhap = tendangnhap; }
 
@@ -79,7 +80,6 @@ public class NhanVien {
 
     @Override
     public String toString() {
-        // Adjust toString to include relevant new fields if needed for display
-        return TenNV; // Or whatever is appropriate for displaying NhanVien objects
+        return TenNV;
     }
 }

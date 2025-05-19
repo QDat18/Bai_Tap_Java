@@ -3,16 +3,16 @@ package model;
 public class KhachHang {
     private String MaKH;
     private String Tenkhach;
-    private String Diachi;
+    private String SDT;
 
     public KhachHang(){
 
     }
 
-    public KhachHang(String maKH, String tenkhach, String diachi) {
-        MaKH = maKH;
-        Tenkhach = tenkhach;
-        Diachi = diachi;
+    public KhachHang(String maKH, String tenkhach, String sdt) {
+        this.MaKH = maKH;
+        this.Tenkhach = tenkhach;
+        this.SDT = sdt;
     }
 
     public String getMaKH() {
@@ -27,11 +27,11 @@ public class KhachHang {
     public void setTenkhach(String tenkhach) {
         Tenkhach = tenkhach;
     }
-    public String getDiachi() {
-        return Diachi;
+    public String getSDT() {
+        return SDT;
     }
-    public void setDiachi(String diachi) {
-        Diachi = diachi;
+    public void setSDT(String sdt) {
+        SDT = sdt;
     }
 
     @Override
