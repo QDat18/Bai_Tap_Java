@@ -53,16 +53,16 @@ public class SanPham {
         return Gianhap;
     }
 
-    public void setGianhap(int gianhap) {
-        Gianhap = gianhap;
+    public void setGianhap(double gianhap) {
+        Gianhap = (int) gianhap;
     }
 
     public int getGiaban() {
         return Giaban;
     }
 
-    public void setGiaban(int giaban) {
-        Giaban = giaban;
+    public void setGiaban(double giaban) {
+        Giaban = (int) giaban;
     }
 
     public int getSoluong() {

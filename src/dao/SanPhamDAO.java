@@ -96,6 +96,37 @@ public class SanPhamDAO {
         }
     }
 
+    public String getLastProductId() {
+        String lastId = null;
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = DatabaseConnection.getConnection();
+            String query = "SELECT TOP 1 MaSP FROM SanPham ORDER BY MaSP DESC";
+            
+            pstmt = conn.prepareStatement(query);
+            rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                lastId = rs.getString("MaSP");
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy mã sản phẩm cuối: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        return lastId;
+    }
     /**
      * Deletes a SanPham record from the database by its ID.
      *

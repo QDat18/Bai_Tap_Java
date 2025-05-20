@@ -240,17 +240,17 @@ public class CTHoaDonBanDetailsDialog extends JDialog {
         int pageWidth = width;
 
         // Header: Vietnamese Title with Ornate Font
-        g2d.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        g2d.setFont(new Font("Arial", Font.BOLD, 20));
         g2d.setColor(sepiaText);
-        g2d.drawString("NHÀ HÀNG CÀ PHÊ", autoCenterText(g2d, "NHÀ HÀNG CÀ PHÊ", pageWidth), y);
-        y += lineHeight * 2;
+        g2d.drawString("THE COFFEE TEAM", autoCenterText(g2d, "THE COFFEE TEAM", pageWidth), y);
+        y += lineHeight * 3;
 
         // Address in classic style
-        g2d.setFont(new Font("Times New Roman", Font.ITALIC, 12));
-        String address = "195/10 Điện Biên Phủ, Quận Bình Thạnh";
+        g2d.setFont(new Font("Arial", Font.ITALIC, 12));
+        String address = "ĐC: Số 12 Phố Chùa Bộc, Q. Đống Đa, TP. Hà Nội";
         g2d.drawString(address, autoCenterText(g2d, address, pageWidth), y);
         y += lineHeight;
-        g2d.drawString("SG 101", autoCenterText(g2d, "SG 101", pageWidth), y);
+        g2d.drawString("HN 101", autoCenterText(g2d, "HN 101", pageWidth), y);
         y += lineHeight * 2;
 
         // Decorative divider
@@ -259,28 +259,28 @@ public class CTHoaDonBanDetailsDialog extends JDialog {
         y += lineHeight;
 
         // Invoice Info
-        g2d.setFont(new Font("Times New Roman", Font.PLAIN, 12));
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
         g2d.setColor(sepiaText);
         g2d.drawString("Số HĐ: " + hdb.getMaHDB(), 20, y); y += lineHeight;
         g2d.drawString("Ngày: " + (hdb.getNgayban() != null ? printDateFormat.format(hdb.getNgayban()) : "N/A"), 20, y); y += lineHeight;
         g2d.drawString("Nhân viên: " + (hdb.getMaNV() != null ? hdb.getMaNV() : "N/A"), 20, y); y += lineHeight;
         g2d.drawString("Khách hàng: " + (hdb.getTenKH() != null ? hdb.getTenKH() : "Khách lẻ"), 20, y); y += lineHeight;
-        g2d.drawString("Giao hàng: GRAB", 20, y); y += lineHeight * 2;
+        g2d.drawString("Giao hàng: Xanh SM", 20, y); y += lineHeight * 2;
 
         // Items Header with Precise Alignment
-        g2d.setFont(new Font("Times New Roman", Font.BOLD, 12));
+        g2d.setFont(new Font("Arial", Font.BOLD, 12));
         g2d.drawString("STT     Tên món      Số Lượng       Đơn giá         Thành tiền", 20, y);
         drawDecorativeLine(g2d, 20, y + 5, pageWidth - 20);
         y += lineHeight * 2;
 
         // Items List with Fixed Column Widths
-        g2d.setFont(new Font("Times New Roman", Font.PLAIN, 12));
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
         int itemCount = 0;
-        int sttWidth = 40;    // Width for STT column (e.g., 1-2 digits)
-        int nameWidth = 100;   // Width for Tên món column (adjusted to fit longer names)
-        int qtyWidth = 30;    // Width for SL column (e.g., 1-5 digits)
-        int priceWidth = 80;  // Width for Đơn giá column (e.g., 10,000 VND)
-        int totalWidth = 80;  // Width for Thành tiền column (e.g., 90,000 VND)
+        int sttWidth = 40;
+        int nameWidth = 100;
+        int qtyWidth = 30;
+        int priceWidth = 80;
+        int totalWidth = 80;
         for (CTHoaDonBan ct : chiTietList) {
             itemCount++;
             String itemName = ct.getTenSP().length() > 10 ? ct.getTenSP().substring(0, 10) + "..." : ct.getTenSP();
@@ -302,25 +302,38 @@ public class CTHoaDonBanDetailsDialog extends JDialog {
         drawDecorativeLine(g2d, 20, y, pageWidth - 20); y += lineHeight;
 
         // Totals
-        g2d.setFont(new Font("Times New Roman", Font.PLAIN, 12));
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
         g2d.drawString(String.format("Tổng số món: %-25d", chiTietList.size()), 20, y); y += lineHeight;
-        g2d.setFont(new Font("Times New Roman", Font.BOLD, 14));
+        g2d.setFont(new Font("Arial", Font.BOLD, 14));
         g2d.drawString(String.format("Tổng cộng: %-23s VNĐ", currencyFormat.format(hdb.getTongtien())), 20, y); y += lineHeight;
-        g2d.setFont(new Font("Times New Roman", Font.PLAIN, 12));
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
         g2d.drawString("Phương thức: Online", 20, y); y += lineHeight;
         g2d.drawString(String.format("Đã thanh toán: %-23s VNĐ", currencyFormat.format(hdb.getTongtien())), 20, y); y += lineHeight * 2;
 
         // Footer
-        g2d.setFont(new Font("Times New Roman", Font.ITALIC, 11));
-        g2d.drawString("Cảm ơn quý khách đã ghé thăm Nhà Hàng Cà Phê.", autoCenterText(g2d, "Cảm ơn quý khách đã ghé thăm Nhà Hàng Cà Phê.", pageWidth), y); y += lineHeight;
-        g2d.drawString("Hẹn gặp lại!", autoCenterText(g2d, "Hẹn gặp lại!", pageWidth), y); y += lineHeight * 2;
+        g2d.setFont(new Font("Arial", Font.ITALIC, 11));
+        g2d.drawString("Cảm ơn quý khách đã ghé thăm THE COFFEE TEAM.", autoCenterText(g2d, "Cảm ơn quý khách đã ghé thăm THE COFFEE TEAM.", pageWidth), y); y += lineHeight;
+        g2d.drawString("Hẹn gặp lại!", autoCenterText(g2d, "Hẹn gặp lại!", pageWidth), y); y += lineHeight * 1;
         g2d.drawString("Liên hệ: 02701 807", 20, y); y += lineHeight;
-        g2d.drawString("Website: https://evat.thecoffeehouse.com", 20, y); y += lineHeight;
-        g2d.drawString("[QR Code]", autoCenterText(g2d, "[QR Code]", pageWidth), y); y += lineHeight * 2;
+        g2d.drawString("Website: https://web.facebook.com/duy.nguyenquang.5439", 20, y); y += lineHeight;
+        try {
+            // 1. Tải ảnh QR code từ file
+            BufferedImage qrImage = ImageIO.read(new File("D://KyIV_HocVienNganHang//LapTrinhHuongDoiTuong//QuanLyCuaHangCaPhe//CoffeeShop//src//images//QR.jpg"));
+            int qrWidth = qrImage.getWidth();
+            int qrHeight = qrImage.getHeight();
+            int qrX = (pageWidth - qrWidth) / 3;
+            g2d.drawImage(qrImage, qrX, y, null);
+            
+            y += qrHeight + lineHeight;
+        } catch (IOException e) {
+            e.printStackTrace();
+            g2d.drawString("[QR Code]", autoCenterText(g2d, "[QR Code]", pageWidth), y);
+            y += lineHeight * 2;
+        }
 
         // Wi-Fi Password
-        g2d.setFont(new Font("Times New Roman", Font.BOLD, 12));
-        g2d.drawString("Mật khẩu Wi-Fi: thecoffeehouse", autoCenterText(g2d, "Mật khẩu Wi-Fi: thecoffeehouse", pageWidth), y);
+        g2d.setFont(new Font("Arial", Font.BOLD, 12));
+        g2d.drawString("Mật khẩu Wi-Fi: ban50kroicho", autoCenterText(g2d, "Mật khẩu Wi-Fi: ban50kroicho", pageWidth), y);
 
         g2d.dispose();
 
