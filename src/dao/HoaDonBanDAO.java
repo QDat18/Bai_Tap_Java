@@ -26,7 +26,6 @@ public class HoaDonBanDAO {
     /**
      * Generates the next sequential code for HoaDonBan (e.g., HDB001, HDB002).
      * Uses synchronization for basic thread safety.
-     *
      * @return The next unique HoaDonBan code, or "ERROR_CODE" if generation fails.
      */
     public synchronized String generateNextHoaDonBanCode() { // synchronized for basic safety
