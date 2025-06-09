@@ -14,7 +14,6 @@ public class Loai {
         Tenloai = tenloai;
     }
 
-    // Getters
     public String getMaloai() {
         return Maloai;
     }
@@ -23,7 +22,6 @@ public class Loai {
         return Tenloai;
     }
 
-    // Setters
     public void setMaloai(String maloai) {
         Maloai = maloai;
     }
