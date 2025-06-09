@@ -38,7 +38,6 @@ public class HoaDonNhap {
      }
 
 
-    // Getters and Setters
     public String getMaHDN() {
         return maHDN;
     }
@@ -79,7 +78,6 @@ public class HoaDonNhap {
         this.tongTien = tongTien;
     }
 
-     // Getters and Setters for display fields
      public String getTenNV() {
          return tenNV;
      }
@@ -97,7 +95,6 @@ public class HoaDonNhap {
      }
 
 
-    // Optional: toString() for debugging
     @Override
     public String toString() {
         return "HoaDonNhap{" +
