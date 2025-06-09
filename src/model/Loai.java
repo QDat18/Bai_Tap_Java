@@ -4,11 +4,9 @@ public class Loai {
     private String Maloai;
     private String Tenloai;
 
-    // Constructor không đối số
     public Loai() {
     }
 
-    // Constructor đầy đủ đối số
     public Loai(String maloai, String tenloai) {
         Maloai = maloai;
         Tenloai = tenloai;
